@@ -441,6 +441,7 @@ $$v_{k+1} =  \max_{\pi \in \Pi} \left( r_\pi + \gamma P_\pi v_k \right),\quad k 
   $v_{k+1}$会用于下一步迭代。注意这里的公式仅仅是一个值的迭代公式，求出的值并不是state value，只有通过BE求解的才是state value。
 上述情况围绕vector form从原理上进行解释，实际计算需要理解elementwise form（每个元素独立操作形式）的实现。
 
+
 #### 4.1.1 Elementwise form and implementation
 考虑第k次迭代，状态s下：
 * Policy update的元素形式为：
@@ -485,6 +486,7 @@ $$v_k(s) \to q_k(s,a) \to \text{new greedy policy } \pi_{k+1}(s) \to \text{new v
 ##### 当k=1时： 
 后续过程即按照上述的顺序，把新的v代入表格4.1得到新的q-values，依次重复即可，上述情形在k=1次迭代后就已经找到了最优策略$\pi_2$和最优状态值$v_2(s)$。
 
+
 ### 4.2 Policy iteration algorithm
 Policy iteration包括了两个步骤：
 * Policy evaluation:这一步是基于给定的policy（$\pi_k$），通过贝尔曼公式去计算对应的state value（$v_{\pi_k}$）
@@ -507,6 +509,7 @@ Policy iteration包括了两个步骤：
    详细证明参考书P65
 
 笼统的说，由于迭代中嵌套的迭代，策略迭代收敛的步数要比值迭代少。
+
 #### 4.2.1 Elementwise form and implementation
 详细的计算过程如下图所示:
 ![My Local Image](./picture/4.4.png)
@@ -595,3 +598,212 @@ $$\text{策略迭代：}\ \pi_0 \xrightarrow{PE} v_{\pi_0} \xrightarrow{PI} \pi_
 总的来说，truncated policy iteration可以看作是在policy evaluation 部分只迭代有限次的policy iteration，从名字上也可以看出。这会导致一个问题，我们前面也提到过：实际得到的迭代值不是真正的状态值，这是否会影响我们对于最优策略和最优状态值得寻找呢？显然是不会影响的，这里不做证明。
 如果对于三种算法的收敛随迭代次数的变化进行比较，显然policy>truncated>value:
 ![My Local Image](./picture/4.11.png)
+
+
+
+## Lec5 Monte Carlo Learning
+在前面的章节中，我们学习到了基于系统模型的最优策略算法，在这一章，我们首次接触model-free的强化学习算法。
+关于learning，我们需要有这样一种想法，如果没有模型那我们需要数据；没有数据我们就需要模型。当模型未知时，我们就需要依赖数据去估算一些参数，而这里又涉及到了概率论中的**期望**（expectation/mean estimation）
+
+
+### 5.1 Motivating example: Mean estimation
+期望的计算是算法的重要部分，我们回顾一下贝尔曼方程，其中action value和state value均可以看作某个随机变量的均值。
+
+对于一个随机变量其期望求解有两种方法，假设为$X$,其值在集合$\mathcal{X}$中取得：
+* 前面有模型的时候，即我们已知概率分布，可以通过概率分布求解：
+  $$\mathbb{E}[X]=\sum_{x\in \mathcal{X}}p(x)x$$
+* 没有模型时，我们通过对于随机变量$X$进行采样，用得到的一系列采样值$\{x_1,x_2,\dots,x_n\}\in X$的平均值去估计期望：
+  $$\mathbb{E}[X] \approx \bar{x} = \frac{1}{n} \sum_{j=1}^{n} x_j$$
+
+上述样本估计整体的方法由**大数定理**给出其估计的无偏和有效性：
+![My Local Image](./picture/5.1.png)
+
+
+### 5.2 Monte Carlo Basic algorithm 
+#### 5.2.1 Coverting policy iteration to be model-free
+我们回顾一下上一节的policy iteration algorithm，其分为两步：policy evaluation 和policy improvement。而在PE中，我们需要求解action value，在PI中根据求解的action value去改进策略，其核心就在这个$q_{\pi_k}(s,a)$的求解上。
+
+回顾action value最原始的定义，本质上就是一个期望：
+$$q_{\pi_k}(s, a) = \mathbb{E}[G_t|S_t = s, A_t = a]$$
+而前面5.1提到期望求解按照有无模型分为两种方法，我们前面使用的是第一种有模型算法：
+* model-based 方法：
+  $$
+  \begin{aligned}
+  q_{\pi_k}(s, a) 
+  &= \mathbb{E}[G_t|S_t = s, A_t = a]\\
+  &=\sum_{r} p(r|s,a)r + \gamma \sum_{s'} p(s'|s,a) v_{\pi_k}(s')
+  \end{aligned}
+  $$
+  其中$\{p(r|s,a),p(s'|s,a)\}$是系统模型相关参数。
+* model-free 方法：
+  action value的定义为：
+  $$
+  \begin{split}
+  q_{\pi_k}(s, a) 
+  &= \mathbb{E}[G_t|S_t = s, A_t = a] \\
+  &= \mathbb{E}[R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots |S_t = s, A_t = a],
+  \end{split}
+  $$
+  这其实是从$(s,a)$出发得到的return的均值。我们可以通过Monte Carlo方法去估计这个均值/期望。那么我们需要先对于这个随机变量采样：即从$(s,a)$出发，按照策略$\pi_k$，获得一定数目的episode（跟前边的trajectory类似）。假设获得了n个episodes，第i个对应的return为$g_{\pi_k}^{(i)}(s,a)$，那么可以用下述式子估计：
+  $$q_{\pi_k}(s, a) = \mathbb{E}[G_t|S_t = s, A_t = a] \approx \frac{1}{n} \sum_{i=1}^n g_{\pi_k}^{(i)}(s, a)$$
+
+MC-based learning的核心思想就是使用**model-free**的方法替代model-based去**估计action values**。
+
+#### 5.2.2 The MC Basic algorithm
+类似于policy iteration，我们可以分两步去描述MC basic algorithm。假设初始策略为$\pi_0$，对于第k次迭代：
+* Policy evaluation
+  对于每一个$(s,a)$，收集足够多的episodes，计算他们return的平均得到对应的action value($q_{\pi_k}(s,a)$)估计值$q_k(s,a)$。
+   $$q_{\pi_k}(s, a) = \mathbb{E}[G_t|S_t = s, A_t = a] \approx \frac{1}{n} \sum_{i=1}^n g_{\pi_k}^{(i)}(s, a)$$
+* Policy improvement
+  同样求解一个最优化问题得到greedy policy：
+   $$\pi_{k+1}(s) = \arg\max_{\pi} \sum_{a} \pi(a|s) q_k(s,a), \quad s \in \mathcal{S}.$$
+  greedy policy为：
+  $$\pi_{k+1}(a|s) = \begin{cases} 
+  1, & a = a_k^{*}(s), \\
+  0, & a \neq a_k^{*}(s),
+  \end{cases} 
+  $$
+  其中$a_k^{*}(s) = \arg\max_{a} q_k(s,a)$
+![My Local Image](./picture/5.2.png)
+
+需要注意的是，在policy iteration中我们实际上**求的是state value**，再由state value去计算action value，根据greedy policy改进策略；而MC basic是**直接估计了action value**，其实是简化了过程，省略了从状态值求动作值的过程，并不会影响整个过程。
+
+MC Basic algorithm更多是帮助我们从model-based过度到model-free的算法，实际上其过于基础，对于sample和数据的利用效率非常低，后续则会介绍基于MC Basic,更加complex和sample-efficient的算法。
+
+
+#### 5.2.3 Illustrative examples
+具体内容详见P83
+这里简要概括一下核心思想：
+1. 关于**需计算的数目**：
+   所有的action values都需要被计算，这里就有state数目$\times$一个state有的action数个action values 需要求解。而每一个action value的估计值是需要对足够多的episodes求平均得到的。无疑这样计算量是很大的。
+   但是对于策略和模型都是deterministic的情形，我们就只需要计算一个episode，因为轨迹是固定的。
+2. **Episode length**的影响：
+   对于一个稍微复杂的grid world例子，当episode的长度由小增大时，我们发现策略是逐渐从target area开始最优，逐渐向远处拓展；而且当长度较短时，会出现离target area较远的state value为0的情况，直观理解就是从state出发在当前长度根本到不了目标区域，所以得不到正reward。
+   故我们需要**足够长**的episode length才能得到最优策略和状态值。
+3. Sparse reward(稀疏奖励)
+  上述情况就引出了一个奖励设置的重要问题，即稀疏奖励，只对于达到目标区域设置正奖励就是一种稀疏奖励，这样会造成学习的效率较低，可以采取非稀疏奖励，即鼓励去探索周边区域，给一个小的正reward，可能会让agent更容易去找到target area。
+
+
+### 5.3 MC Exploring Starts
+基于MC basic algorithm，我们需要更加使得新的算法更加sample-efficient，这里就拓展到这节的MC Expolring Starts。
+
+#### 5.3.1 Utilizing samples more effeciently
+首先我们列写出一个episode来进行分析：
+$$s_1 \xrightarrow{a_2} s_2 \xrightarrow{a_4} s_1 \xrightarrow{a_2} s_2 \xrightarrow{a_3} s_5 \xrightarrow{a_1} \dots$$
+每一次一个state-action组合出现在一个episode中，我们称这是对于这个state-action的一次**visit**，而提升效率的方式就是去充分利用visits。
+
+* **initial visit：**
+  最简单的策略是initial visit，即一个episode只用来估计这个轨迹起始的state-action pair的action value，例如上面的episode只用来估计$（s_1,a_2）$，这就是MC Basic使用的方法，显然效率很低。
+
+实际上，一个episode可以按下图方式分解，在过程中visit的state-action pair的后边的轨迹就可以看作一个从这个pair开始的新的episode，由此就可以估计这个pair，实现一个episode的visits的高效利用：
+![My Local Image](./picture/5.3.png)
+对于visit利用方式不同又可以分为$first-visit$和$every-visit$：
+* **first visit:**
+  只使用一个state-action pair第一次出现的visit进行估计，例如上面的episode中，$（s_1,a_2）$出现了两次，我们只使用首次出现后的episode进行估计。
+* **every visit:**
+  使用一个state-action pair每一次出现的visit进行估计，上面的episode中，$（s_1,a_2）$出现了两次，我们两次都用来估计。
+
+从样本利用效率来看，$every-visit$策略是最优的。如果一个交互序列（episode）足够长，能多次覆盖所有状态 - 动作对，那么仅靠这一个序列，用每次访问策略就可能完成所有动作价值的估计。
+不过，每次访问策略得到的样本是存在相关性的 —— 因为从第二次访问开始的轨迹，其实只是第一次访问轨迹的子集。但如果这两次访问在轨迹中相距较远，这种相关性就不会太强。
+
+#### 5.3.2 Updating polices more efficiently
+前面我们关于利用visit提出了新的方法，而现在对于策略更新的时机也进行讨论。
+* first strategy:前面我们在policy evaluation中，是在计算一个state-action pair所有episodes对应的return后，对其求均值得到action value的估计。
+  其缺陷在于agent需要等到所有序列都收集完毕，才能去更新估计值。
+* second stratery:第二种方法克服了上述缺陷————仅利用单个episode的return来近似对应的action value。如此一来，只要获取到一个序列，就能立即得到一个粗略的估计值；进而可以以**逐序列（episode-by-episode**的方式对策略进行改进。
+
+#### 5.3.3 MC Exploring Starts Algorithm
+综合上述的两种改进方法，得到了本节内容：MC Exploring Starts
+这个算法使用了**every visit**和**逐序列（episode-by-episode**改进策略，详细的算法细节如下图：
+![My Local Image](./picture/5.4.png)
+值得注意的是，在计算各状态 - 动作对出发的折扣回报时，算法会从序列的终止状态开始，反向遍历至起始状态。这类技术能提升算法效率。
+
+下面通过ai转写总结了本人对于上述算法的理解：
+![My Local Image](./picture/5.5.png)
+
+
+探索起始条件（exploring starts condition） 要求：从**每一个状态 - 动作对出发，都能生成足够多的交互序列**。只有当所有状态 - 动作对都被充分探索后，我们才能基于大数定律，准确估计它们的动作价值，进而成功寻得最优策略。反之，如果某个动作的探索不充分，其动作价值的估计值就会存在偏差；即便该动作是最优动作，最终也可能不会被策略选中。蒙特卡罗基础算法与带探索起始的蒙特卡罗算法均需满足这一条件。
+
+但在诸多实际场景中，尤其是需要与物理环境交互的场景，这一条件往往难以满足，例如我们没办法实际中将机器人搬到每一个网格去，下面就来解决这个exploring starts带来的问题：
+
+### 5.4 MC $\epsilon$-Greedy:Learning without expolring starts
+这种算法通过soft policy(柔性策略)来实现对于每个state-action pair的充分visit。
+
+#### 5.4.1 $\epsilon$-greedy policies
+先来介绍soft policy：即一个在任意状态下采取任意action的概率都为正的策略。
+
+这就**区别于前边的greedy策略**，前面的要求随机起始，才能保证不漏访问某一个pair；而这种策略最极端的情况下，只需要一个足够长的episode就能访问所有的state-action pairs。
+
+一个最常见的soft policy就是$\epsilon$-greedy policies。这是一个随机策略，有更大的概率选择greedy action(有着最大action value的action)，同时对于其他的action有着相同的不为0的正概率，通过参数$\epsilon \in [0,1]$来调控概率。具体的**策略数学表达**如下：
+\[
+\pi(a|s) =
+\begin{cases}
+1 - \dfrac{\epsilon}{|\mathcal{A}(s)|}\bigl(|\mathcal{A}(s)| - 1\bigr), & \text{for the greedy action}, \\[6pt]
+\dfrac{\epsilon}{|\mathcal{A}(s)|}, & \text{for the other } |\mathcal{A}(s)| - 1 \text{ actions},
+\end{cases}
+\]
+其中$|\mathcal{A}(s)|$代表s下action的数目。非常容易证明，greedy action的概率大于其他选择的概率。
+
+当$\epsilon=0$时就是greedy policy
+当$\epsilon=1$时就是完全stochastic的策略，所有action 有相同的概率选择。
+
+$\epsilon$-greedy policies是一种stochastic的策略，实际中我们如何去执行这个策略呢？
+首先，生成一个服从均匀分布的随机数 $x\in[0,1]$
+* 若$x\geq \epsilon$，选择贪心动作
+* 若$x<\epsilon$,则在动作集合$\mathcal{A}(s)$中随机选择一个动作（可能会再次选到贪心动作）
+
+通过这种方式，选择贪心动作的总概率为$1-\epsilon+\frac{\epsilon}{\mathcal{A}(s)}$；选择其他动作的概率均为$\frac{\epsilon}{\mathcal{A}(s)}$
+
+#### 5.4.2 Algorithm description
+为了将$\epsilon$-greedy policies融入到MC learning中,我们只需将policy improvement中的策略从greedy改到$\epsilon$-greedy就行。
+
+但需要注意的是，此时策略迭代的策略域不再是原本的
+全体策略集合$\Pi$，而是变成了其子集$\Pi_{\epsilon}$。
+
+那么自然有个问题，策略代替之后，我们能否保证还能得到最优策略？答案既肯定又否定：
+* 肯定的理由是在给定充足样本时，算法可以收敛到集合$\Pi_{\epsilon}$中的optimal $\epsilon$-greedy 策略
+* 否定的理由是该策略仅在$\Pi_{\epsilon}$最优，不一定在全体策略集合$\Pi$中最优
+不过当$\epsilon$较小时，两个集合的最优策略会很接近。
+
+**详细的算法过程如下图所示：**
+![My Local Image](./picture/5.6.png)
+
+
+### 5.5 Exploration and expolitation of $\epsilon$-greedy policies
+探索（Exploration）与利用（Exploitation）构成了强化学习中的一个基本权衡问题。
+* **探索**指的是策略应尽可能尝试更多的动作，从而保证所有动作都能被充分访问与评估；
+* **利用**则指改进后的策略应当选择动作价值最大的贪心动作。
+
+但需要注意的是，若探索不充分，当前得到的动作价值可能并不准确。因此，我们需要在利用的过程中持续进行探索，以避免错失最优动作。
+
+$\epsilon$-greedy policies提供了一种平衡探索与利用的有效方法。一方面，这个策略会以较高的概率选择贪心动作，充分利用估计的价值；另一方面保留了选择其他动作的可能，来保证探索能力。
+
+而$\epsilon$-greedy policies的核心思想，就是通过**牺牲部分最优性/利用性来增强探索能力**。
+
+若要提升利用效率与策略最优性，我们需要减小 ε 的取值；反之，若要增强探索能力，则需要增大 ε 的取值
+
+书本P93中给出了对于不同ε下迭代结果对比。
+
+首先介绍一个概念，策略的**一致性/consistence**
+    针对两个 ε- 贪心策略$π_1$和$π_2$，它们被判定为一致的充要条件是：
+    对于所有状态 s，策略 $π_1$在 s下概率最大的动作，与策略 $π_2$在 s下概率最大的动作完全相同。
+
+* Optimality
+  * 当 ε=0时，该策略退化为贪心策略，且在全体策略中均为最优；
+  * 当 ε取值较小（如 0.1）时，最优 ε- 贪心策略与最优贪心策略保持一致。
+  * 当 ε增大至某个值（例如 0.2）时，得到的 ε- 贪心策略就不再与最优贪心策略一致。
+  
+  因此，若要使 ε- 贪心策略与最优贪心策略保持一致，**ε的取值必须足够小**。
+
+  以目标区域来分析，很容易理解，当ε较小时，最优策略是保持静止在原地，当ε增大时，有更大的概率进入forbidden area，获得负奖励，这时最优策略就不再是停留原地了，与最优贪心策略不一致。
+
+* Exploration
+  ε- 贪心策略的探索能力与 ε 取值呈正相关：ε 越大，探索能力越强；ε 越小，探索能力越弱。
+  * ε=1 时：策略探索能力极强。任意状态下所有动作的选择概率均等，当轨迹长度足够长时，单次轨迹即可多次访问所有状态 - 动作对，且各状态 - 动作对的访问次数分布几乎均匀。
+  * ε=0.5 时：策略探索能力弱于 ε=1 的情况。尽管轨迹足够长时仍能覆盖所有动作，但访问次数分布极不均衡—— 部分动作被高频访问，多数动作仅被少量访问。
+
+实际训练过程，可以类似于机器学习中的余弦退火，动态调整ε，**先大后小**，初始设置较大的 ε 以充分探索状态空间，后续逐步减小 ε，在保证探索充分性的同时，最终收敛到性能较优的策略。
+
+
+## Lec6 Stochastic Approximation
+
