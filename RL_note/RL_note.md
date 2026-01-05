@@ -806,4 +806,229 @@ $\epsilon$-greedy policies提供了一种平衡探索与利用的有效方法。
 
 
 ## Lec6 Stochastic Approximation
+实际上，前序章节与后续章节之间存在一个知识断层：我们目前所学的算法均为非增量式，而后续章节将要学习的算法则属于**增量式**。
+本章将通过介绍随机逼近（stochastic approximation）的基础知识来弥补这一知识断层。
+
+### 6.1 Motivating example:Mean estimation
+我们通过一个均值估计的问题来为算法引入增量式。
+
+考虑一个取值于有限集合$\mathcal{X}$的随机变量$X$，我们的目标是去估计均值$\mathbb{E}[X]$。由大数定理，当我们已知一组独立同分布的采样（i.i.d）$\{x_i\}^n_{i=1}$，可以通过下列公式近似：
+$$\mathbb{E}[X] \approx \bar{x} \doteq \frac{1}{n}\sum_{i=1}^n x_i. \tag{6.1}$$
+
+而上述公式的实现可以分为**非增量式**和**增量式**两种：
+* non-incremental
+  需要先收集所有的采样，再计算均值，需要等待全部样本收集完，如果数目很多，需要等待很久。
+* incremental
+  通过增量式方法计算平均值，每次新收集一个样本，会直接在之前的均值基础上直接计算即可，更新很快，具体方式如下：
+  假设
+  $$w_{k+1} \doteq \frac{1}{k}\sum_{i=1}^k x_i, \quad k = 1,2,\dots$$
+  $w_{k+1}$为k个样本的均值，那么前一步k-1个样本均值为：
+  $$w_k = \frac{1}{k-1}\sum_{i=1}^{k-1} x_i, \quad k = 2,3,\dots$$
+  我们用$w_k$和新增的$x_k$来表示$w_{k+1}$:
+  $$w_{k+1} = \frac{1}{k}\sum_{i=1}^k x_i = \frac{1}{k}\left( \sum_{i=1}^{k-1} x_i + x_k \right) = \frac{1}{k}\left( (k-1)w_k + x_k \right) = w_k - \frac{1}{k}(w_k - x_k).$$
+  故我们得到了一个**增量式求取均值的算法**:
+  $$w_{k+1} =w_k - \frac{1}{k}(w_k - x_k) $$
+
+增量式算法的优势在于，每接收一个样本，我们就能立即计算出平均值。该平均值可用于近似$\bar{x}$，进而估计$\mathbb{E}[X]$。
+
+进一步可以把系数$\frac{1}{k}$换成更加通用的$\alpha_k$，得到更一般的形式，这也将和后边的RM算法产生联系：
+$$w_{k+1} =w_k - \alpha_k(w_k - x_k) $$
+
+
+### 6.2 Robbins-Monro algorithm
+随机逼近是一类用于求解方程根或优化问题的随机迭代算法的统称。其优势在于**无需已知目标函数**或其导数的显式表达式。
+
+RM算法是随机逼近领域的开创性成果，后续6.4会说明ML中的SGD其实可以看作RM的一种特殊形式，接下来正式介绍RM算法。
+
+以一个求根问题为例：
+$$g(w)=0$$
+其中w是一个$\mathbb{R}$上的未知变量，g是$\mathbb{R}$到$\mathbb{R}$的函数。
+为什么我们要选取一个求根问题呢？事实上很多问题都可以转化为求根问题，例如一个优化问题去min$J(w)$，那么一个必要条件就是梯度为0，我们令g为梯度就是上述的求根问题了。而我们在本章探索的是在g的表达式未知的情况，通过数据/采样去求解解$w^*$，这其实就体现了没有模型就要有数据的思想。
+
+我们已知的数据是**输入**$w$和经过函数后**带噪声的采样值** $\tilde{g}(w,\eta)$，其表达式如下：
+$$\tilde{g}(w,\eta) = g(w) + \eta,$$
+![My Local Image](./picture/6.1.png)
+我们目的是通过$w$和$\tilde{g}$求解$g(w)=0$。
+
+**RM算法通过下列公式求解：**
+$$w_{k+1} = w_k - a_k \tilde{g}(w_k, \eta_k), \quad k = 1, 2, 3, \dots$$
+其中$w_k$是第k次对于根的估计，$\tilde{g}(w_k, \eta_k)$是第k次带噪声的观测值。
+
+#### 6.2.1 Convergencce
+
+在书中通过一个例子$g(w)=tanh(w-1)$来进行分析算法的收敛性，下面给出严格的收敛条件定理：
+##### Therorem 6.1 (Robbins-Monro theorem)
+在RM算法中，如果：
+* 对于任意的w，均有：$\quad 0 < c_1 \le \nabla_w g(w) \le c_2$
+* $\sum_{k=1}^{\infty}a_k = \infty \quad \text{且} \quad \sum_{k=1}^{\infty}a_k^2 < \infty$
+* $\mathbb{E}[\eta_k \mid \mathcal{H}_k] = 0 \quad \text{且} \quad \mathbb{E}[\eta_k^2 \mid \mathcal{H}_k] < \infty$
+
+其中$\mathcal{H}_k = \{w_k, w_{k-1}, \dots\}$，那么$w_k$几乎必然收敛于满足$g(w^*)=0$的根。
+该定理的核心依据是几乎必然收敛的概念，相关内容详见附录 B。
+
+下面对定理 6.1 的三个条件分别进行解释：
+1. **函数单调和梯度有界**：
+   * $0 < c_1 \le \nabla_w g(w)$表明函数$g(w)$是单调递增的，这是个较强的条件，保证了方程$g(w)=0$的根存在且唯一。若为单减，取负也能作为单增分析，重要的是**单调性**。
+   对应实际优化问题，g的梯度相当于$J(w)$的二阶导，其单增的条件等价于$J(w)$ **是凸函数**。
+   * $g(w) \le c_2$表明$g(w)$的梯度有上界。
+2. **系数序列约束**：
+    关于系数序列$\{a_k\}$的条件设计十分巧妙，这类约束在强化学习算法中也十分常见。
+    * $\sum_{k=1}^{\infty}a_k^2 < \infty$意味着系数平方的级数极限存在上界，要求系数$a_k$随k趋于无穷时**收敛于0**。
+    * $\sum_{k=1}^{\infty}a_k = \infty$意味着系数级数极限趋于无穷大，这是要求$a_k$收敛到0的**速度不能太快**。我的理解不能让$a_k$比$w_k$先收敛，不然算法无法有效迭代。
+3. **误差条件**：
+  这一条件的约束是温和的，它不要求观测误差$η_k$服从高斯分布。这一条件要求噪声的均值为0，且其能量不会发散。
+  一个重要的特例是：若$\{η_k\}$为独立同分布的随机序列，且满足$\mathbb{E}[η_k]=0$,$\mathbb{E}[η_k^2]<\infty$，那么这个条件自动成立，原因是此时$η_k$与历史信息集合$\mathcal{H}_k$无关。$\mathbb{E}[\eta_k \mid \mathcal{H}_k]=\mathbb{E}[η_k]=0$,$\mathbb{E}[\eta_k^2 \mid \mathcal{H}_k]=\mathbb{E}[η_k^2]<\infty$
+
+接下来详细分析一下第二个关于系数序列的约束：
+* $\sum_{k=1}^{\infty}a_k^2 < \infty$意味着$a_k$会收敛到0。
+  $$w_{k+1}-w_k = -a_k \tilde{g}(w_k;\eta_k)$$
+  当$a_k\rightarrow 0$时，才有$w_{k+1}\rightarrow w_k$，即保证k足够大的时候$w$能收敛。
+* $\sum_{k=1}^{\infty}a_k = \infty$要求系数收敛到0的速度不能太快。如果过快会出现$\sum_{k=1}^{\infty}a_k < \infty$，对于$w$求解累加后的迭代式：
+$$w_{\infty}-w_1 = -\sum_{k=1}^{\infty}a_k\tilde{g}(w_k;\eta_k)$$
+在上述条件下，右侧的绝对级数会存在上界，设为b
+$$|w_{\infty}-w_1| = \left|\sum_{k=1}^{\infty}a_k\tilde{g}(w_k;\eta_k)\right| \le b $$
+此时若初始值过远时，超过这个上界时，那么就无法收敛到真实根，就跟我前面理解的一样，$a_k$先收敛了，但$w_k$还没收敛。这个条件实际是保证了**任意初值下都能收敛**。
+
+一个满足第二个条件的典型序列是
+$$a_k=\frac{1}{k}$$
+这就是前面mean estimation对应的系数，具体的证明见书本P108。
+
+在 RM 算法的诸多实际应用中，系数$a_k$常被选为一个足够小的常数，这不满足第二个条件，但某种意义上仍具有收敛性，这里不再展开。
+
+#### 6.2.2 Application to mean estimation
+实际上我们在6.1讲到的均值估计的增进式算法可以**视作一种特殊的RM算法**，下面进行说明：
+首先回顾前面的公式：
+$$w_{k+1} =w_k - \alpha_k(w_k - x_k) $$
+其中当$\alpha_k=\frac{1}{k}$时，就是均值的估计算法，但是前面遗留了一个问题：当$\alpha_k$为一个通用参数时，此时算法的收敛性如何？我们下面证明上述算法是一种特殊的RM算法来说明这个问题。
+
+我们定义函数：
+$$g(w)=w-\mathbb{E}[X]$$
+而原始问题是一个均值求解问题，我们通过构造转换为一个求根问题，求出得$w^*$就是均值。
+
+我们能够已知带噪声的采样值，$\tilde{g} =w - x$其中x是X的一个采样。
+$$
+\begin{align*}
+\tilde{g}(w,\eta) &= w - x \\
+&= w - x + \mathbb{E}[X] - \mathbb{E}[X] \\
+&= (w - \mathbb{E}[X]) + (\mathbb{E}[X] - x) = g(w) + \eta,
+\end{align*}
+$$
+其中$ \eta = \mathbb{E}[X] - x$
+
+那么求解这个问题的RM算法可以写成：
+$$w_{k+1} = w_k - \alpha_k \tilde{g}(w_k, \eta_k) = w_k - \alpha_k (w_k - x_k),$$
+这实际上就是前边的均值问题公式，其收敛性由6.2.1中的三个条件决定。
+
+### 6.3 Dvoretzky's convergence theorem
+详见P109，关于收敛性的详细证明。
+
+
+### 6.4 Stochastic gradient descent（SGD）
+这一节将会介绍在机器学习中广泛应用的随机梯度下降算法（SGD），并将说明SGD是RM算法的特殊情况，以及前面的均值估计问题是SGD的特殊情况。
+
+我们考虑下面一个优化问题：
+$$\min_{w} J(w) = \mathbb{E}\left[f(w, X)\right], \tag{6.10}$$
+$w$是待优化的参数，$X$是一个随机变量，期望是对于$X$求的。
+
+最直接的方法是通过梯度下降每次迭代$\alpha_k$倍的梯度，其中$\nabla_w \mathbb{E}\left[f(w, X)\right] = \mathbb{E}\left[\nabla_w f(w, X)\right]$，故公式写成：
+$$w_{k+1} = w_k - \alpha_k \nabla_w J(w_k) = w_k - \alpha_k \mathbb{E}\left[\nabla_w f(w_k, X)\right]. \tag{6.11}$$
+但很明显这种方法的难点在后边期望$\mathbb{E}\left[\nabla_w f(w_k, X)\right]$的求取。如果我们知道$X$的概率分布那么可以求解，但实际中大多数都是未知模型的，这时候跟前边一样，我们需要用大量的独立同分布采样$\{x_i\}_{i=1}^n$去估计期望：
+$$\mathbb{E}\left[\nabla_w f(w_k, X)\right] \approx \frac{1}{n}\sum_{i=1}^n \nabla_w f(w_k, x_i).$$
+回代入（6.11）：
+$$w_{k+1} = w_k - \frac{\alpha_k}{n}\sum_{i=1}^n \nabla_w f(w_k, x_i). \tag{6.12}$$
+这种算法的问题也很明显，一次迭代需要等待所有的采样进行完才能继续，实际中采样是一个个获得的，与前面的改进方法类似，我们也采取类似增量式的方法，每采样一次就更新一次$w$:
+$$w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k), \tag{6.13}$$
+其中$x_k$是第K步采样值。而这正是著名的随机梯度下降算法（SGD），相对梯度下降多了“随机”，因为SGD依赖于随机采样集合$\{x_k\}$。
+
+**对比GD和SGD算法，本质上**是将$\mathbb{E}\left[\nabla_w f(w_k, X)\right]$这个真实的梯度用随机梯度$\nabla_w f(w_k, x_k)$来代替。这种方式不会影响迭代结果的收敛性，后面会有证明。
+
+#### 6.4.1 Application to mean estimation
+和RM算法类似，我们现在也用SGD算法去进行均值估计，然后可以证明前边的**均值估计算法是SGD的特殊形式**。
+
+我们可以将均值估计问题转化为下列优化问题：
+$$\min_{w} J(w) = \mathbb{E}\left[ \frac{1}{2}\|w - X\|^2 \right] \doteq \mathbb{E}\left[f(w,X)\right], \tag{6.14}$$
+其中$f(w,X) = \frac{\|w - X\|^2}{2}, \quad \nabla_w f(w,X) = w - X$，很容易看出，这个优化问题的解$w^*$（$\nabla_w J(w)=0$）实际上就是均值$\mathbb{E}[X]$。
+
+求解上述优化问题的**梯度下降算法**就可以写成下述形式：
+$$
+\begin{align*}
+w_{k+1} &= w_k - \alpha_k \nabla_w J(w_k) \\
+&= w_k - \alpha_k \mathbb{E}\left[ \nabla_w f(w_k, X) \right] \\
+&= w_k - \alpha_k \mathbb{E}\left[ w_k - X \right].
+\end{align*}
+$$
+自然也可以写出**SGD算法**：
+$$w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k) = w_k - \alpha_k (w_k - x_k),$$
+很明显，这跟前面6.1的mean estimation的算法形式一致。
+
+#### 6.4.2 Convergence pattern of SGD
+定义了一个随机采样和真实梯度的相对误差去进行分析，详见P116。
+主要结论是；
+* 当$w$离$w^*$较远时，相对误差很小，SGD和GD有相似的性质，会快速靠近$w^*$；
+* 当$w$离$w^*$较近时，相对误差会变大，SGD会在目标值附近随机波动，表现出一定的随机性。
+  
+
+#### 6.4.3 A determinstic formulation of SGD
+在式子（6.13）中SGD的形式包含了随机变量，但实际遇到的问题都是**确定的数据，不包含随机变量**，这个时候就需要**没有随机变量/确定形式的SGD算法**。
+
+这个时候，我们已知的是一组实际存在的数据$\{x_i\}_{i=1}^n$。那么此时的优化问题变为：
+$$\min_{w} J(w) = \frac{1}{n}\sum_{i=1}^n f(w, x_i),$$
+事实上，这种情况才是实际常见的情况。
+此时梯度下降算法公式为：
+$$w_{k+1} = w_k - \alpha_k \nabla_w J(w_k) = w_k - \alpha_k \frac{1}{n}\sum_{i=1}^n \nabla_w f(w_k, x_i).$$
+同理可以改写为增量式算法：
+$$w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k). \tag{6.16}$$
+需要注意的是，这里的$x_k$是第k个时间步获得的数值，不是集合$\{x_i\}_{i+1}^n$的第k个元素。上述形式跟SGD很相似，但区别在$x_k$。
+
+实际上，我们可以把**确定性的集合**$\{x_i\}_{i=1}^n$**看作一个随机变量**$X$**的域**:
+即定义$X$为集合$\{x_i\}_{i=1}^n$上的随机变量，其服从均匀分布，每次取一个数据的概率为$p(X = x_i) = 1/n$
+
+那么就将一个**确定性优化**问题转换为**随机优化**问题：
+$$\min_{w} J(w) = \frac{1}{n}\sum_{i=1}^n f(w, x_i) = \mathbb{E}\left[f(w, X)\right].$$
+在我们人工定义的$X$下，上式的对随机变量均值是严格等于前面的求平均。
+
+故（6.16）本质上就是SGD；只要$x_k$从集合$\{x_i\}_{i+1}^n$中独立且均匀抽样得到的，估计值就能收敛，注意这里每次由于是随机取值，可能取到重复的值，而对取值不同的处理就是下一小节要讲的BGD、SGD、mini-batch GD。
+
+#### 6.4.4 BGD、SGD和mini-batch GD
+原始的GD算法需要计算梯度的均值，而我们实际通过样本值去近似这个均值。根据一次迭代（iteration）使用的样本数，可以分为BGD、SGD和mini-batch GD
+
+BGD在一次迭代中使用了所有的采样值；SGD在一次迭代中只使用一次采样值；而mini-batch GD在一次迭代中从样本集中随机抽样选取特定数目的采样值。
+
+对于优化问题： $min J(w)=\mathbb{E}[f(w,X)]$ ，样本集为$\{x_i\}_{i=1}^n$，三种算法如下：
+
+$$
+% 批量梯度下降（BGD）
+w_{k+1} = w_k - \alpha_k \frac{1}{n}\sum_{i=1}^n \nabla_w f(w_k, x_i), \quad \text{(BGD)}\\
+% 小批量梯度下降（MBGD）
+w_{k+1} = w_k - \alpha_k \frac{1}{m}\sum_{j \in \mathcal{I}_k} \nabla_w f(w_k, x_j), \quad \text{(MBGD)}\\
+% 随机梯度下降（SGD）
+w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k). \quad \text{(SGD)}
+$$
+
+MBGD可以看作BGD和SGD的中间版本：
+* 与 SGD 相比，MBGD 的随机性更低 —— 因为它使用多个样本（而非 SGD 的单个样本）计算梯度；
+* 与 BGD 相比，MBGD 不需要每次迭代都用全量样本，因此更灵活。
+
+若取m=1，MBGD 就退化为 SGD；
+但当m=n时，**MBGD 不一定等价于 BGD**—— 这是因为 MBGD 使用的是**n个随机抽取的样本**，随机抽取的n个样本可能无法覆盖整个样本集；而 BGD 使用的是**所有n个样本**（无重复）。
+
+在收敛速度上，一般而言MBGD 的收敛速度快于 SGD，而BGD收敛最快，这里的速度指的是循环次数，实际运算时间跟处理器性能有关。
+
+下面有三种方法的实际效果对比图：
+![My Local Image](./picture/6.2.png)
+
+
+#### 6.4.5 Convergence of SGD
+##### Theorem 6.4(Convergence of SGD)
+$$w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k), \tag{6.13}$$
+对于式 (6.13) 中的随机梯度下降（SGD）算法，若满足以下条件，则估计序列$w_k$**几乎必然收敛**到方程$\nabla_w \mathbb{E}[f(w; X)] = 0$
+* 对任意取值$w$，有$0 < c_1 \le \nabla_w^2 f(w; X) \le c_2$
+* $\sum_{k=1}^{\infty}\alpha_k = \infty \quad \text{且} \quad \sum_{k=1}^{\infty}\alpha_k^2 < \infty$
+* 序列$\{x_k\}_{k=1}^{\infty} $为独立同分布序列
+
+条件1针对函数$f$的**凸性**，要求$f$的曲率存在上下界。此处的$w$为标量，$\nabla_w^2 f(w; X)$也为标量；若$w$为向量，$\nabla_w^2 f(w; X)$就是经典的Hessian matrix（海森矩阵）。
+
+条件2与 RM 算法的对应条件类似。在实际应用中,$α_k$常被选为足够小的常数；此时虽不满足条件 2，但算法仍能在某种意义下收敛。
+
+条件3是算法收敛的常规要求。
 
