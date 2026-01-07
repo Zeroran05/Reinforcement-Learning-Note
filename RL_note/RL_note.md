@@ -1,4 +1,121 @@
-## Lec 1基本概念
+- [Lec1 基本概念](#lec1-基本概念)
+  - [1.State](#1state)
+  - [2.Action](#2action)
+    - [Action space:一个状态所有可能的action集合。$A(s\_i)={a\_i},i=1...5$](#action-space一个状态所有可能的action集合as_ia_ii15)
+  - [3.State transition(状态转换) $p(s'|s,a)$](#3state-transition状态转换-pssa)
+    - [State transition probability:使用条件概率来表示。](#state-transition-probability使用条件概率来表示)
+  - [3.Policy $\\pi(a|s)$](#3policy-pias)
+  - [4.Reward(most unique) $p(r|s,a)$](#4rewardmost-unique-prsa)
+  - [5.Trajectory and Return(轨迹和反馈)](#5trajectory-and-return轨迹和反馈)
+  - [6.Discounted return](#6discounted-return)
+  - [7.Episode](#7episode)
+  - [8.Markov decision process(MDP)](#8markov-decision-processmdp)
+      - [可以这样理解MDP](#可以这样理解mdp)
+- [Lec2 Bellman Equation](#lec2-bellman-equation)
+  - [1.State value](#1state-value)
+      - [state value和return的关系：](#state-value和return的关系)
+  - [2.Bellman Equation(需要手写推导)](#2bellman-equation需要手写推导)
+      - [关于Bellman equation的几个要点：](#关于bellman-equation的几个要点)
+  - [3.Examples to illustrate bellman equation](#3examples-to-illustrate-bellman-equation)
+  - [4.Matrix-vector form of the Bellman equation](#4matrix-vector-form-of-the-bellman-equation)
+      - [其中矩阵$P\_\\pi$有一些有趣的特性：](#其中矩阵p_pi有一些有趣的特性)
+  - [5.Solving Bellman equation](#5solving-bellman-equation)
+  - [6.Action value](#6action-value)
+      - [需要注意的是:](#需要注意的是)
+- [Lec3 Optimal State Values and Bellman Optimality Equation](#lec3-optimal-state-values-and-bellman-optimality-equation)
+  - [1.如何优化/提升策略](#1如何优化提升策略)
+  - [2.Optimal state and optimal policies](#2optimal-state-and-optimal-policies)
+  - [3.Bellman optimality equation（BOE）](#3bellman-optimality-equationboe)
+    - [3.1 BOE右侧max求解](#31-boe右侧max求解)
+    - [3.3 Vector Form](#33-vector-form)
+    - [3.4 Contraction mapping theorem（压缩映射定理）](#34-contraction-mapping-theorem压缩映射定理)
+      - [Definition 3.4.1](#definition-341)
+      - [Theorem 3.4.1](#theorem-341)
+      - [Theorem 3.4.2(Contraction property of f(v))](#theorem-342contraction-property-of-fv)
+    - [3.5 Sovling an optimal policy from BOE](#35-sovling-an-optimal-policy-from-boe)
+      - [${v}^{\*}$的求解](#v的求解)
+      - [${\\pi}^{\*}$的求解](#pi的求解)
+      - [Theorem 3.5.1（ $v^*$与$\\pi^*$的最优性）](#theorem-351-v与pi的最优性)
+      - [Theorem 3.5.2（Greedy optimal policy）](#theorem-352greedy-optimal-policy)
+    - [3.6 Factors that influence optimal policy](#36-factors-that-influence-optimal-policy)
+      - [impact of discount rate $\\gamma$](#impact-of-discount-rate-gamma)
+      - [impact of reward values](#impact-of-reward-values)
+- [Lec4 Value Iteration \& Policy Iteration(值迭代\&策略迭代算法)](#lec4-value-iteration--policy-iteration值迭代策略迭代算法)
+  - [4.1 Value iteration algorithm](#41-value-iteration-algorithm)
+    - [4.1.1 Elementwise form and implementation](#411-elementwise-form-and-implementation)
+    - [4.1.2 Illustrative examples](#412-illustrative-examples)
+      - [当k=0时：](#当k0时)
+      - [当k=1时：](#当k1时)
+  - [4.2 Policy iteration algorithm](#42-policy-iteration-algorithm)
+      - [Lemma 4.1(Policy improvement)](#lemma-41policy-improvement)
+      - [Theorem 4.1(Convergence of policy iteration)](#theorem-41convergence-of-policy-iteration)
+    - [4.2.1 Elementwise form and implementation](#421-elementwise-form-and-implementation)
+    - [4.2.2 Illustrative examples](#422-illustrative-examples)
+  - [4.3 Truncated policy iteration algorithm](#43-truncated-policy-iteration-algorithm)
+    - [4.3.1 Comparing value iteration and policy iteration](#431-comparing-value-iteration-and-policy-iteration)
+      - [值迭代对应是**j=1**的截断策略迭代；](#值迭代对应是j1的截断策略迭代)
+      - [策略迭代对应的是**j趋于**$\\infty$ 的截断策略迭代。](#策略迭代对应的是j趋于infty-的截断策略迭代)
+    - [4.3.2 Truncated policy iteration algorithm](#432-truncated-policy-iteration-algorithm)
+- [Lec5 Monte Carlo Learning](#lec5-monte-carlo-learning)
+  - [5.1 Motivating example: Mean estimation](#51-motivating-example-mean-estimation)
+  - [5.2 Monte Carlo Basic algorithm](#52-monte-carlo-basic-algorithm)
+    - [5.2.1 Coverting policy iteration to be model-free](#521-coverting-policy-iteration-to-be-model-free)
+    - [5.2.2 The MC Basic algorithm](#522-the-mc-basic-algorithm)
+    - [5.2.3 Illustrative examples](#523-illustrative-examples)
+  - [5.3 MC Exploring Starts](#53-mc-exploring-starts)
+    - [5.3.1 Utilizing samples more effeciently](#531-utilizing-samples-more-effeciently)
+    - [5.3.2 Updating polices more efficiently](#532-updating-polices-more-efficiently)
+    - [5.3.3 MC Exploring Starts Algorithm](#533-mc-exploring-starts-algorithm)
+  - [5.4 MC $\\epsilon$-Greedy:Learning without expolring starts](#54-mc-epsilon-greedylearning-without-expolring-starts)
+    - [5.4.1 $\\epsilon$-greedy policies](#541-epsilon-greedy-policies)
+    - [5.4.2 Algorithm description](#542-algorithm-description)
+  - [5.5 Exploration and expolitation of $\\epsilon$-greedy policies](#55-exploration-and-expolitation-of-epsilon-greedy-policies)
+- [Lec6 Stochastic Approximation](#lec6-stochastic-approximation)
+  - [6.1 Motivating example:Mean estimation](#61-motivating-examplemean-estimation)
+  - [6.2 Robbins-Monro algorithm](#62-robbins-monro-algorithm)
+    - [6.2.1 Convergencce](#621-convergencce)
+      - [Therorem 6.1 (Robbins-Monro theorem)](#therorem-61-robbins-monro-theorem)
+    - [6.2.2 Application to mean estimation](#622-application-to-mean-estimation)
+  - [6.3 Dvoretzky's convergence theorem](#63-dvoretzkys-convergence-theorem)
+  - [6.4 Stochastic gradient descent（SGD）](#64-stochastic-gradient-descentsgd)
+    - [6.4.1 Application to mean estimation](#641-application-to-mean-estimation)
+    - [6.4.2 Convergence pattern of SGD](#642-convergence-pattern-of-sgd)
+    - [6.4.3 A determinstic formulation of SGD](#643-a-determinstic-formulation-of-sgd)
+    - [6.4.4 BGD、SGD和mini-batch GD](#644-bgdsgd和mini-batch-gd)
+    - [6.4.5 Convergence of SGD](#645-convergence-of-sgd)
+      - [Theorem 6.4(Convergence of SGD)](#theorem-64convergence-of-sgd)
+- [Lec7 Temporal-Difference Methods](#lec7-temporal-difference-methods)
+  - [7.1 TD learning of state values](#71-td-learning-of-state-values)
+    - [7.1.1 Algorithm description](#711-algorithm-description)
+    - [7.1.2 Property analysis](#712-property-analysis)
+      - [TD learning V.S Monto Carlo](#td-learning-vs-monto-carlo)
+    - [7.1.3 Convergence analysis](#713-convergence-analysis)
+  - [7.2 Sarsa:TD learning of action values](#72-sarsatd-learning-of-action-values)
+    - [7.2.1 Algorithm description](#721-algorithm-description)
+    - [7.2.2 Optimal policy learning via Sarsa](#722-optimal-policy-learning-via-sarsa)
+      - [Expected Sarsa](#expected-sarsa)
+  - [7.3 n-step Sarsa](#73-n-step-sarsa)
+  - [7.4 Q-learning：D learning of optimal action values](#74-q-learningd-learning-of-optimal-action-values)
+    - [7.4.1 Algorithm description](#741-algorithm-description)
+    - [7.4.2 Off-policy v.s. on-policy](#742-off-policy-vs-on-policy)
+    - [7.4.3 Implementation](#743-implementation)
+  - [7.5 A unified viewpoint](#75-a-unified-viewpoint)
+- [Lec8 Value Function Methods](#lec8-value-function-methods)
+  - [8.1 Value representation: From table to function](#81-value-representation-from-table-to-function)
+  - [8.2 TD learning of state values based on function](#82-td-learning-of-state-values-based-on-function)
+    - [8.2.1 Objective function](#821-objective-function)
+    - [8.2.2 Optimization algorithms](#822-optimization-algorithms)
+    - [8.2.3 Selection of function approximators](#823-selection-of-function-approximators)
+    - [8.2.4 Illustrative examples](#824-illustrative-examples)
+    - [8.2.5 Theoretical analysis](#825-theoretical-analysis)
+  - [8.3 TD learning of action values based on function approximation](#83-td-learning-of-action-values-based-on-function-approximation)
+    - [8.3.1 Sarsa with function approximation](#831-sarsa-with-function-approximation)
+    - [8.3.2 Q-learning with function approximation](#832-q-learning-with-function-approximation)
+  - [8.4 Deep Q-learning](#84-deep-q-learning)
+    - [8.4.1 Algorithm description](#841-algorithm-description)
+    - [8.4.2 Illustrative examples](#842-illustrative-examples)
+
+## Lec1 基本概念
 
 
 ### 1.State
@@ -358,7 +475,7 @@ $$\|f(v_1)-f(v_2)\|_\infty \le \gamma\|v_1-v_2\|_\infty$$
 
 #### 3.5 Sovling an optimal policy from BOE
 使用上述压缩映射工具可以对于BOE进行分析求解最优状态$v^*$和最优策略$\pi^*$。
-##### $v^*$的求解
+##### ${v}^{*}$的求解
 如果$v^*$是BOE的解，那么其满足
 $$v^*=f(v^*)=\max_{\pi \in \Pi} (r_{\pi} + \gamma P_{\pi} v^*)\tag{3.5}$$
 显然$v^*$就是一个不动点，故BOE的解一定存在同时还是唯一的。由压缩映射定理的性质，我们可以通过递推算法求解这个$v^*$
@@ -367,7 +484,7 @@ $$v_{k+1} = f(v_k) = \max_{\pi \in \Pi} \left( r_\pi + \gamma P_\pi v_k \right),
 
 这个迭代算法即被称为值迭代（value iteration）
 
-##### $\pi^*$的求解
+##### ${\pi}^{*}$的求解
 当$v^*$已经求得，我们很容易通过求解下面这个方程得到$\pi^*$：
 $$\pi^*=\arg \max_{\pi \in \Pi}(r_\pi+\gamma P_\pi v^*) \tag{3.6}$$
 将得到的$\pi^*$代入上述(3.6)式，得到：
@@ -1032,3 +1149,380 @@ $$w_{k+1} = w_k - \alpha_k \nabla_w f(w_k, x_k), \tag{6.13}$$
 
 条件3是算法收敛的常规要求。
 
+
+## Lec7 Temporal-Difference Methods
+### 7.1 TD learning of state values
+TD学习是一系列很广泛的RL算法，我们在本节通过分析其对于状态值的估计，来引入最基本的TD learning算法公式。
+
+#### 7.1.1 Algorithm description
+首先我们直接给出TD learning的算法公式，后续再去详细分析含义。我们的目标是在给定的策略$\pi$下，基于一些在$\pi$下的经验采样$(s_0,r_1,s_1,\dots,r_{t+1}.s_{t+1},\dots)$，去估计state value。
+$$
+\begin{align}
+v_{t+1}(s_t) &= v_t(s_t) - \alpha_t(s_t)\left[ v_t(s_t) - \left(r_{t+1} + \gamma v_t(s_{t+1})\right) \right], \tag{7.1} \\
+v_{t+1}(s) &= v_t(s), \quad \text{for all } s \neq s_t, \tag{7.2}
+\end{align}
+$$
+其中 t=0,1,2,…。这里的$v_t(s_t)$表示的是在时刻t下**对于state value** $v_\pi(s_t)$ **的估计**；$\alpha_t(s_t)$表示的是在时刻t下对于状态$s_t$的**学习率**。
+
+由式子（7.2）可知，在时刻t仅对于被访问的状态$s_t$的状态值按照（7.1）进行更新，一般会省略（7.2），但我们要清楚有这一项式子。
+
+观察迭代公式，我们发现这跟前面的SGD算法有些相似，区别是SGD的系数后是对梯度均值的估计，而TD中其实是当前值跟目标值的差，二者的效果本质上是相似的。
+
+首次接触时序差分（TD）学习算法的读者可能会疑惑其设计思路的由来。事实上，该算法可被视作求解贝尔曼方程的一种特殊随机逼近算法。为说明这一点，首先回顾状态值函数的定义：
+$$
+\begin{align*}
+v_\pi(s) 
+&= \mathbb{E}[ G_{t} \big| S_t = s]\\
+&= \mathbb{E}\left[R_{t+1} + \gamma G_{t+1} \big| S_t = s\right],\ s \in \mathcal{S} 
+\tag{7.3}
+\end{align*}
+$$
+而因为：
+$$\mathbb{E}\left[G_{t+1} \big| S_t = s\right] = \sum_a \pi(a|s) \sum_{s'} p(s'|s,a) v_\pi(s') = \mathbb{E}\left[v_\pi(S_{t+1}) \big| S_t = s\right]$$
+这个式子右边是对于$S_{t+1}$的期望，可以这样展开：
+$$
+\begin{align*}
+\mathbb{E}\left[v_\pi(S_{t+1}) \big| S_t =s\right]
+&= \sum_{s'}p(S_{t+1}=s'|S_t=s)v_{\pi}(s')\\
+&= \sum_{s'}\sum_a \pi(a|s)  p(s'|s,a) v_\pi(s') 
+\end{align*}
+$$
+这样就与左边式子相同了，故（7.3）可以改写为：
+$$v_\pi(s) = \mathbb{E}\left[R_{t+1} + \gamma v_\pi(S_{t+1}) \big| S_t = s\right],\ s \in \mathcal{S} \tag{7.4}$$
+这个式子是贝尔曼方程的另一种表达形式，又被称为**贝尔曼期望方程**。
+
+时序差分（TD）算法可通过将RM算法应用于求解式 (7.4) 中的贝尔曼方程推导得出，详细推导见书P127，其实BE就是一个求一个期望，我们自然可以类比前面用RM去进行mean estimation的方式构造合适的函数$g$，具体的过程如下面两张图所示：
+![My Local Image](./picture/7.1.png)
+![My Local Image](./picture/7.2.png)
+需要注意的是，相对于（7.1）的TD learning式子，在后边使用的是状态值$v_{\pi}(s_{t+1})$，而（7.1）使用的是$v_t(s_{t+1})$。这是因为在用RM求解贝尔曼方程式，对应的情况就是已知其他的状态值。如果我们想通过上式求解所有的状态值，那么我们将上述状态值替换成（7.1）中一样的对其他状态值的估计$v_t(s_{t+1})$就行。
+
+
+#### 7.1.2 Property analysis
+我们对于（7.1）中的算法计算式进行标注：
+$$
+\begin{equation}
+\underbrace{v_{t+1}(s_t)}_{\text{new estimate}} = \underbrace{v_t(s_t)}_{\text{current estimate}} - \alpha_t(s_t)
+[ \overbrace{v_t(s_t) -\underbrace{ ( r_{t+1} + \gamma v_t(s_{t+1}) )}_{\text{TD target } \bar{v}_t}}^{\text{TD error } \delta_t}],
+\tag{7.6}
+\end{equation}
+$$
+其中
+* $\bar{v}_t \doteq r_{t+1} + \gamma v_t(s_{t+1})$被称作***TD target***;
+* $\delta_t \doteq v(s_t) - \bar{v}_t = v_t(s_t) - \left( r_{t+1} + \gamma v_t(s_{t+1}) \right)$被称为***TD error***
+
+自然我们会有对于上述定义的疑惑：
+* **为什么$\bar{v_t}$叫做TD target**
+  这其实可以从两个角度去共同理解：
+  1. 首先，$\bar{v_t}$是算法**想要估计值$v(s_t)$达到的目标**。我们可以将（7.6）变形：
+  \[
+  \begin{aligned}
+  v_{t+1}(s_t) - \bar{v}_t &= \left[ v_t(s_t) - \bar{v}_t \right] - \alpha_t(s_t)\left[ v_t(s_t) - \bar{v}_t \right] \\
+  &= \left[ 1 - \alpha_t(s_t) \right] \left[ v_t(s_t) - \bar{v}_t \right].
+  \end{aligned}
+  \]
+  取模长：
+  \[
+  \left| v_{t+1}(s_t) - \bar{v}_t \right| = \left| 1 - \alpha_t(s_t) \right| \left| v_t(s_t) - \bar{v}_t \right|.
+  \]
+  而由于$\alpha_t(s_t)$是一个在$（0,1）$之间的一个数，故：
+  \[
+  \left| v_{t+1}(s_t) - \bar{v}_t \right| < \left| v_t(s_t) - \bar{v}_t \right|.
+  \]
+  这一式子就代表每一次迭代值都在向着这个$\bar{v_t}$靠近。
+  2. 另一个角度自然而然聚焦于：**我们为什么要靠近这个**$\bar{v_t}$？这是老师网课没有讲清楚的。
+  $$
+  v_\pi(s) = \mathbb{E}\left[R_{t+1} + \gamma v_\pi(S_{t+1}) \big| S_t = s\right],
+  \\
+  \\
+  \bar{v}_t = r_{t+1} + \gamma v_t(s_{t+1})
+  $$
+  $\bar{v_t}$可以看作对于上述BE的单次近似采样，区别是后边不是真实的状态值，而是我们的估计。当所有的状态值都向着目标靠近时，最终收敛的就是真实的状态值。故某种程度上，向着$\bar{v_t}$靠近是实现算法收敛的高效方式。
+
+* **如何理解TD error?**
+  首先，这个误差被称为 “时序差分”，是因为$\delta_t = v(s_t) - \bar{v}_t = v_t(s_t) - \left( r_{t+1} + \gamma v_t(s_{t+1}) \right)$反映了两个时间步$t$和$t+1$之间的差异。其次，当状态值估计准确时，TD 误差的期望为零。具体来说，当$v_t=v_π$（估计值等于真实值）时，TD 误差的期望为：
+  $$
+  \begin{align*}
+  \mathbb{E}\left[\delta_t \mid S_t = s_t\right] &= \mathbb{E}\left[v_\pi(S_t) - \left(R_{t+1} + \gamma v_\pi(S_{t+1})\right) \mid S_t = s_t\right] \\
+  &= v_\pi(s_t) - \mathbb{E}\left[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s_t\right] \\
+  &= 0. \quad \text{（由式(7.3)可得）}
+  \end{align*}
+  $$
+  因此，TD 误差不仅反映了两个时间步之间的差异，更重要的是，它还反映了估计值$v_t$与真实状态值$v_\pi$之间的偏差。
+
+  从更抽象的层面看，TD 误差可以被理解为 **“新息（innovation）”**—— 即从经验样本$(s_t,r_{t+1},s_{t+1})$中获得的新信息。TD 学习的核心思想，就是**基于新获取的信息修正当前的状态值估计**。新息在*卡尔曼滤波*等许多估计问题中都是核心概念
+
+注意这一节的公式只是用来估计给定策略下的状态值的，需要找到最优策略的话还要计算动作值并结合policy improvement，这在7.2节中会讲解。
+
+##### TD learning V.S Monto Carlo
+这里给出TD和MC算法的对比:
+![My Local Image](./picture/7.3.png)
+还要补充一点，由于TD有着**自举性（bootstrapping）**，故其受初值影响大，如果初值选取距离实际值相差太大，估计值在迭代早期会有bias，但最终随着次数增加这个bias会被消除。
+
+#### 7.1.3 Convergence analysis
+收敛性对于学习率$\alpha_t(s)$有要求：
+![My Local Image](./picture/7.4.png)
+详细的说明和定理的证明参见书P130。
+
+
+### 7.2 Sarsa:TD learning of action values
+7.1中的最简单的TD learning估计的是状态值，而本节介绍的Sarsa将估计action value，并结合policy improvement实现最优策略的学习。
+
+#### 7.2.1 Algorithm description
+我们的目标是在给定的策略$\pi$下，基于一些在$\pi$下的经验采样$(s_0,a_0,r_1,s_1,a_1\dots,s_{t},a_{t},r_{t+1},s_{t+1},a_{t+1},\dots)$，去估计action value。接着就能根据估计的action value去进行策略改进。action value计算的算法公式如下：
+$$
+\begin{align*}
+q_{t+1}(s_t, a_t) &= q_t(s_t, a_t) - \alpha_t(s_t, a_t) \left[ q_t(s_t, a_t) - \left( r_{t+1} + \gamma q_t(s_{t+1}, a_{t+1}) \right) \right]\tag{7.12}\\
+q_{t+1}(s, a) &= q_t(s, a), \quad \text{for all } (s, a) \neq (s_t, a_t),
+\end{align*}
+$$
+其中 t=0,1,2,…。这里的$q_t(s_t,a_t)$表示的是在时刻t下**对于action value** $q_\pi(s_t,a_t)$ **的估计**；$\alpha_t(s_t,a_t)$表示的是在时刻t下对于状态$s_t$-动作$a_t$对的**学习率**。
+在时刻$t$，只有$(s_t,a_t)$的$q$值会被更新，其他的状态动作对的$q$保持不变。
+
+下面分析Sarsa算法的一些重要性质：
+* **为什么这个算法叫 “Sarsa”？**
+  因为算法的每一次迭代都需要$(s_{t},a_{t},r_{t+1},s_{t+1},a_{t+1})$。Sarsa 是 “状态 - 动作 - 奖励 - 状态 - 动作（state-action-reward-state-action）” 的缩写。
+* **为什么 Sarsa 要这样设计？**
+  参考前面估计state value的TD learning算法，Sarsa实际上是将TD中的状态值替换为动作值。
+* **Sarsa 在数学上的作用是什么？**
+  与TD类似，Sarsa也是一种**求解给定策略下的贝尔曼方程**的随机近似算法，不过这里的贝尔曼方程是以action value进行表示的：
+  $$% 公式 (7.13)
+  q_\pi(s, a) = \mathbb{E}\left[ R + \gamma q_\pi(S', A') \middle| s, a \right], \quad \text{for all } (s, a). \tag{7.13}
+  $$
+  下图展示了（7.13）为什么是BE。
+  ![My Local Image](./picture/7.5.png)
+
+* **Sarsa是收敛的吗？**
+  ![My Local Image](./picture/7.6.png)
+  这个定理跟前面TDlearning的收敛条件相似。
+  特别的，$\sum_{t} \alpha_t(s; a) =\infty$ 这一条件要求**每个状态 - 动作对都必须被访问无穷多次（或足够多次）**。在时刻$t$,若$(s,a)=(s_t,a_t)$，则$\alpha_t(s; a)>0$，否则$\alpha_t(s; a)=0$。
+
+
+#### 7.2.2 Optimal policy learning via Sarsa
+上面只介绍了用Sarsa估计action value，实际的Sarsa是一个包括policy improvement的过程，其完整的算法如下：
+![My Local Image](./picture/7.7.png)
+
+如算法 7.1 所示，每一轮迭代包含两个步骤：
+1. 第一步是更新已访问状态 - 动作对的$q$值；
+2. 第二步是将策略更新为$ϵ$-greedy策略。
+
+$q$值更新步骤仅会更新时刻$t$访问到的单个状态 - 动作对的$q$值，之后立即更新$s_t$对应的策略。
+
+因此，我们并不会在更新策略前充分评估当前策略 —— 这是基于广义策略迭代的思想。此外，策略更新后会立即用于生成下一个经验样本；这里采用$ϵ$-greedy策略是为了保证探索性。
+
+书中举了一个例子。这里是用Sarsa去找到从特定起始状态到目标状态的最优路径，而非为所有状态找到最优策略。这种任务实际中更常见，这类任务相对简单，因为只需探索路径附近的状态，无需遍历所有状态；但造成的问题是得到的**最优策略可能是局部的**，其他访问少的状态的策略不一定是最优。
+
+##### Expected Sarsa
+Sarsa算法有一个变体：Expected Sarsa，区别是将后边的下一时序状态action value的估计换成了期望（对于动作A的期望）。
+$$
+\begin{align*}
+q_{t+1}(s_t, a_t) &= q_t(s_t, a_t) - \alpha_t(s_t, a_t) \left[ q_t(s_t, a_t) - \left( r_{t+1} + \gamma \mathbb{E}[q_t(s_{t+1}, A) \right)] \right]\\
+q_{t+1}(s, a) &= q_t(s, a), \quad \text{for all } (s, a) \neq (s_t, a_t),
+\end{align*}
+$$
+其中：
+$$
+\mathbb{E}[q_t(s_{t+1}, A)]=\sum_a \pi_t(a|s_{t+1})q_t(s_{t+1},a)\doteq v_t(s_{t+1})
+$$
+是$q_t(s_{t+1},a)$在策略$\pi_t$下的期望值。
+期望 Sarsa 的表达式与 Sarsa 极为相似，二者的区别仅在于时序差分（TD）目标的定义：具体来说，期望 Sarsa 的 TD 目标是$r_{t+1} + \gamma \mathbb{E}[q_t(s_{t+1}, A)$，而 Sarsa 的 TD 目标是$r_{t+1} + \gamma \mathbb{E}[q_t(s_{t+1}, a_{t+1})$。
+
+由于该算法的计算过程中引入了期望值，因此被命名为期望 Sarsa。
+
+尽管计算期望值会略微增加算法的计算复杂度，但这一设计能**有效降低估计方差（estimation variances）**—— 原因是它将 Sarsa 中涉及的随机变量集合从$(s_{t},a_{t},r_{t+1},s_{t+1},a_{t+1})$降到了$(s_{t},a_{t},r_{t+1},s_{t+1})$。
+
+而实际上期望Sarsa跟Sarsa一样，都是用来求解贝尔曼方程的随机近似算法：
+$$
+q_\pi(s; a) = \mathbb{E}\Bigl[R_{t+1} + \gamma\mathbb{E}\bigl[q_\pi(S_{t+1}; A_{t+1})\big|S_{t+1}\bigr]\Big|S_t = s; A_t = a\Bigr];\quad \text{for all } s, a: \tag{7.15}
+$$
+我们可以将下式：
+$$\mathbb{E}\bigl[q_\pi(S_{t+1}; A_{t+1})\big|S_{t+1}\bigr] = \sum_{A'} q_\pi(S_{t+1}; A')\pi(A'|S_{t+1}) = v_\pi(S_{t+1})$$
+代入式子（7.15）就能得到下面这个标准的贝尔曼方程：
+$$
+q_\pi(s; a) = \mathbb{E}\Bigl[R_{t+1} + \gamma v_\pi(S_{t+1})\Big|S_t = s; A_t = a\Bigr]
+$$
+这个式子其实就是**action value的定义**。（根据（7.4）的贝尔曼期望方程得到）
+
+
+### 7.3 n-step Sarsa
+这一节介绍n-step Sarsa，这是一种Sarsa的拓展。事实上，我们会发现Sarsa和前面的MC都是n-step Sarsa的特殊形式。
+
+回忆一下状态值的定义：
+$$
+q_\pi(s, a) = \mathbb{E}\left[ G_t \middle| S_t = s, A_t = a \right], \tag{7.16}
+$$
+而$G_t$是满足下式定义的discounted return:
+$$
+G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots
+$$
+事实上，Sarsa、n-step Sarsa和MC的区别就在于$G_t$的展开方式：
+![My Local Image](./picture/7.8.png)
+其中的$G_t^{(n)}$都是一个值，只是展开的数目不同而已。将不同的展开式代入（7.16）就能得到不同的算法：
+* $n=1$时，就是本章的Sarsa算法；
+  $$
+  \begin{align*}
+  q_\pi(s, a) &= \mathbb{E}\left[ G_t^{(1)} \middle| s, a \right] = \mathbb{E}\left[ R_{t+1} + \gamma q_\pi(S_{t+1}, A_{t+1}) \middle| s, a \right].\\
+  q_{t+1}(s_t, a_t) &= q_t(s_t, a_t) - \alpha_t(s_t, a_t) \left[ q_t(s_t, a_t) - \left( r_{t+1} + \gamma q_t(s_{t+1}, a_{t+1}) \right) \right],
+  \end{align*}
+  $$
+* $n=\infty$时，同时设置学习率为1，就是前面的MC learning算法。
+  $$
+  \begin{align*}
+  q_\pi(s, a) &= \mathbb{E}\left[ G_t^{(\infty)} \middle| s, a \right] = \mathbb{E}\left[ R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \middle| s, a \right].\\
+  q_{t+1}(s_t, a_t) &= g_t \doteq r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots,
+  \end{align*}
+  $$
+* $n$取其他值时，就是这节的n-step Sarsa：
+  $$q_\pi(s, a) = \mathbb{E}\left[ G_t^{(n)} \middle| s, a \right] = \mathbb{E}\left[ R_{t+1} + \gamma R_{t+2} + \dots + \gamma^n q_\pi(S_{t+n}, A_{t+n}) \middle| s, a \right].$$
+  其具体的算法公式如下：
+  $$
+  \begin{align*}
+  q_{t+1}(s_t, a_t) &= q_t(s_t, a_t) \\
+  &- \alpha_t(s_t, a_t) \left[ q_t(s_t, a_t) - \left( r_{t+1} + \gamma r_{t+2} + \dots + \gamma^n q_t(s_{t+n}, a_{t+n}) \right) \right]. \tag{7.17}
+  \end{align*}
+  $$
+  要实现式 (7.17) 中的n-step Sarsa 算法，我们需要经验样本$(s_t,a_t,r_{t+1},s_{t+1},a_{t+1},\dots,r_{t+n},s_{t+n},a_{t+n}$。而在时刻$t$，$r_{t+n},s_{t+n},a_{t+n})$均未被采集，故我们必须等到时刻$t+n$，才能取更新$(s_t,a_t)$的action value，故式子（7.17）可以重写为：
+  $$
+  \begin{align*}
+  q_{t+n}(s_t, a_t) &= q_{t+n-1}(s_t, a_t)\\
+  &-\alpha_{t+n-1}(s_t, a_t) \left[ q_{t+n-1}(s_t, a_t) - \left( r_{t+1} + \gamma r_{t+2} + \dots + \gamma^n q_{t+n-1}(s_{t+n}, a_{t+n}) \right) \right],
+  \end{align*}
+  $$
+
+
+由于n-step Sarsa 将 Sarsa 和 MC 学习作为两种极端情况包含在内，其性能介于 Sarsa 与 MC 学习之间也就不足为奇了。具体来说：
+* 若n取较大的数值，n-step Sarsa会接近 MC 学习：估计结果的方差相对较高，但偏差较小；
+* 若n取较小的数值，n-step Sarsa会接近 Sarsa：估计结果的偏差相对较大，但方差较低。
+
+
+### 7.4 Q-learning：D learning of optimal action values
+前面介绍的都是对于给定策略状态值或者动作值的估计，这一节将会介绍大名鼎鼎的Q-learning算法，其**直接是对最优action value和最优policy进行估计**。
+
+#### 7.4.1 Algorithm description
+先给出其具体的算法：
+$$
+\begin{align*}
+q_{t+1}(s_t, a_t) &= q_t(s_t, a_t) - \alpha_t(s_t, a_t) \left[ q_t(s_t, a_t) - \left( r_{t+1} + \gamma \max_{a \in \mathcal{A}(s_{t+1})} q_t(s_{t+1}, a) \right) \right], \tag{7.18} \\
+q_{t+1}(s, a) &= q_t(s, a), \quad \text{for all } (s,a) \neq (s_t, a_t),
+\end{align*}
+$$
+其他参数跟前面都是一样的，$q_{t+1}(s_t, a_t)$是对于$(s_t,a_t)$的最优action value的估计。
+
+Q-learning跟Sarsa很像，只有后边的TD-target不同：
+* Q-learning：
+  $$r_{t+1} + \gamma \max_{a \in \mathcal{A}(s_{t+1})} q_t(s_{t+1}, a)$$
+* Sarsa:
+  $$r_{t+1} + \gamma  q_t(s_{t+1}, a_{t+1})$$
+
+此外，一次迭代中，在给定的$(s_t,a_t)$下，Sarsa需要$(r_{t+1},s_{t+1},a_{t+1})$，而Q-learning只需要$(r_{t+1},s_{t+1})$。
+
+跟前面介绍的所有的TD learning类似，Q-learning实际上也是在求解一个方程，不过这个方程从贝尔曼方程变成了**贝尔曼最优方程**：
+$$q(s,a) = \mathbb{E} \left[ R_{t+1} + \gamma \max_{a} q(S_{t+1},a) \middle| S_t = s, A_t = a \right]. \tag{7.19}$$
+上式是BOE的证明不再说明，详见书P140。
+
+#### 7.4.2 Off-policy v.s. on-policy
+接下来介绍RL中非常重要的两个概念：***Off-policy*(异策略学习)** 和***on-policy*(同策略学习)** 算法。
+
+Q-learning与其他 TD 算法相比的特殊之处在于：Q-learning是off-policy的，而其他算法（如 Sarsa）是on-policy的。
+
+下面介绍二者的定义：强化学习任务中存在两种策略： ***behavior policy*(行为策略)** 和 ***target policy*（目标策略）**。
+* 行为策略是用于生成经验样本的策略；
+* 目标策略是不断更新、最终收敛到最优策略的策略。
+
+当**行为策略与目标策略相同时，这种学习过程称为同策略学习(on-policy)**；若二者不同，则称为异策略学习(off-policy)。
+
+*off-policy*的优势在于：它可以基于其他策略（例如人类操作者执行的策略）生成的经验样本，来学习最优策略。
+
+Sarsa是*on-policy*的，虽然使用$ϵ$- 贪心策略保留了一定的探索能力，但$ϵ$通常较小，探索能力有限。
+而我们可以设计off-policy:行为策略可以被设计为具有强探索性的策略。例如，若我们希望估计所有状态 - 动作对的动作价值，必须生成能充分访问每个状态 - 动作对的回合;再通过异策略（optimal greedy）来优化策略，学习效率会显著提升。
+
+判断一个算法是同策略还是异策略，可以从两个角度分析：
+1. 算法要解决什么数学问题？（评估的是哪个策略）
+2. 算法所需的经验样本是如何获得的？（通过什么策略）
+
+下面对于前面提到过的三种典型算法进行分析：
+* **Sarsa算法是*on-policy***
+  原因如下：Sarsa 的每一轮迭代包含两个步骤:
+  1. 第一步是通过求解某策略$\pi$的 Bellman 方程来评估$\pi$，这需要$\pi$生成的样本，因此$π$是行为策略(behavior policy);
+  2. 第二步是基于$\pi$的估计值得到改进后的策略，因此$\pi$也是不断更新、最终收敛到最优策略的目标策略(target policy)。
+ 
+  从样本生成角度也能验证：
+  Sarsa 每轮迭代需要的样本是$(s_t, a_t, r_{t+1},s_{t+1},a_{t+1})$，其生成过程如下：
+  $$s_t \xrightarrow{\pi_b} a_t \xrightarrow{\text{model}} r_{t+1}， s_{t+1} \xrightarrow{\pi_b} a_{t+1}$$
+  可以看到，行为策略$\pi_b$同时用于在$s_t$生成$a_t$、在$s_{t+1}$生成$a_{t+1}$。Sarsa 要估计的是某策略$π_T$下$(s_t,a_t)$的动作价值，而$π_T$会基于估计值不断改进，因此是目标策略。
+
+  实际上$π_T$和$\pi_b$是同一个——因为$\pi_T$的评估依赖样本$(r_{t+1},s_{t+1},a_{t+1})$，而$a_{t+1}$是依赖$\pi_b$生成的。换句话说，Sarsa 评估的策略，正是生成样本的策略。
+
+
+
+* **蒙特卡洛（MC）学习是*on-policy***
+  原因与 Sarsa 类似：待评估、改进的目标策略，与生成样本的行为策略是同一个。
+
+* **Q-learning算法是*off-policy***
+  根本原因在于：Q-learning是求解贝尔曼最优方程的算法，而 Sarsa 是求解给定策略的 Bellman 方程的算法。求解 Bellman 方程只能评估对应的策略，而求解 Bellman 最优方程可以直接得到最优价值与最优策略。
+  Q-learning一次迭代所需的样本为$(s_t, a_t, r_{t+1}, s_{t+1})$
+  $$s_t \xrightarrow{\pi_b} a_t \xrightarrow{\text{model}} r_{t+1}; s_{t+1}$$
+  可以看到，行为策略$\pi_b$仅用于在$s_t$生成$a_t$；而算法估计的是$(s_t,a_t)$的最优action value，依赖的是$(r_{t+1},s_{t+1})$，而这两者的采样并不依赖策略$\pi_b$，而是由系统模型或与环境交互获得的。故目标策略和行为策略不是同一个，Q-learning是*off-policy*。
+
+另一个易与 “On-policy / off-policy” 混淆的概念是 **“online / offline”**：
+* online learning 指智能体在与环境交互的同时，更新价值与策略；
+* offline learning 指智能体不与环境交互，仅使用预先采集的经验数据更新价值与策略。
+
+若算法是同策略的，则可以在线实现，但无法使用其他策略生成的预采集数据；若算法是异策略的，则既可以在线实现，也可以离线实现。
+
+
+#### 7.4.3 Implementation
+下面图片给出了Q-learning的两个版本，对于off-policy而言，behavior policy和target policy可以不同，故on-policy可以看作off-policy的特殊情况。
+![My Local Image](./picture/7.9.png)
+需要注意的是，off-policy的版本中，policy improvement的策略是greedy，这是因为当生成样本数据的策略$\pi_b$探索性足够时，就不需要再用$\epsilon$-greedy策略去提供探索性了。
+
+### 7.5 A unified viewpoint
+到目前为止，我们已经介绍了不同的时序差分（TD）算法，例如 Sarsa、n-step Sarsa 和 Q-learning。本节我们将引入一个统一框架，以涵盖所有这些算法以及蒙特卡洛（MC）学习。
+
+具体来说，用于动作价值估计的 TD 算法可表示为如下统一形式：
+$$q_{t+1}(s_t; a_t) = q_t(s_t; a_t) - \alpha_t(s_t; a_t)\bigl[q_t(s_t; a_t) - \bar{q}_t\bigr]; \tag{7.20}$$
+其中$\bar{q}_t$为TD target，而介绍的算法的区别就是$\bar{q}_t$的不同，具体对比如下图所示：
+![My Local Image](./picture/7.10.png)
+式 (7.20) 可被视为求解如下统一方程的随机近似算法：
+$$q(s, a) = \mathbb{E}\bigl[\bar{q}_t \big| s, a\bigr]$$
+该方程会随$\bar{q}_t$形式的不同而呈现不同表达式，这些表达式汇总于表 7.2。
+
+可以看到，除 Q-learning以求解贝尔曼最优方程为目标外，其余所有算法均以求解贝尔曼方程为目标。
+
+
+
+## Lec8 Value Function Methods
+
+
+
+### 8.1 Value representation: From table to function
+
+
+
+### 8.2 TD learning of state values based on function 
+
+#### 8.2.1 Objective function
+
+#### 8.2.2 Optimization algorithms
+
+#### 8.2.3 Selection of function approximators
+
+#### 8.2.4 Illustrative examples
+
+#### 8.2.5 Theoretical analysis
+
+
+### 8.3 TD learning of action values based on function approximation
+
+
+#### 8.3.1 Sarsa with function approximation
+
+#### 8.3.2 Q-learning with function approximation
+
+
+
+### 8.4 Deep Q-learning
+
+
+#### 8.4.1 Algorithm description
+
+#### 8.4.2 Illustrative examples
