@@ -115,6 +115,22 @@
     - [8.4.1 Algorithm description](#841-algorithm-description)
     - [8.4.2 Illustrative examples](#842-illustrative-examples)
   - [8.5 Summary](#85-summary)
+- [Lec9 Policy Gradient Methods](#lec9-policy-gradient-methods)
+  - [9.1 Policy representation: From table to function](#91-policy-representation-from-table-to-function)
+  - [9.2 Metrics for defining optimal policies](#92-metrics-for-defining-optimal-policies)
+    - [Metric 1:Average state value](#metric-1average-state-value)
+    - [Metric 2: Average reward](#metric-2-average-reward)
+    - [Some remarks](#some-remarks)
+  - [9.3 Gradients of the metrics](#93-gradients-of-the-metrics)
+      - [Theorem 9.1 (Policy gradient theorem)](#theorem-91-policy-gradient-theorem)
+    - [9.3.1 Derivation of the gradients in the discounted case](#931-derivation-of-the-gradients-in-the-discounted-case)
+      - [Lemma 9.1 $\\bar{v}_{\\pi}(\\theta)$和$\\bar{r}_\\pi(\\theta)$等价性](#lemma-91-barvpitheta和barrpitheta等价性)
+      - [Lemma 9.2 $v\_\\pi$的梯度](#lemma-92-v_pi的梯度)
+      - [Theorem 9.2 折扣下$\\bar{v}\_\\pi^0$的梯度](#theorem-92-折扣下barv_pi0的梯度)
+      - [Theorem 9.3 折扣下$\\bar{r}_\\pi$和$\\bar{v}_\\pi$的梯度](#theorem-93-折扣下barrpi和barvpi的梯度)
+    - [9.3.2 Derivation of the gradients in the undiscounted case](#932-derivation-of-the-gradients-in-the-undiscounted-case)
+  - [9.4 Monte Carlo policy gradient (REINFORCE)](#94-monte-carlo-policy-gradient-reinforce)
+  - [9.5 Summary](#95-summary)
 
 ## Lec1 基本概念
 
@@ -1734,3 +1750,326 @@ DQN相较于tabular形式的Q-learning，表现出了数据利用的高效性。
 尽管神经网络已被广泛用作非线性函数近似器，但本章对线性函数情况进行了全面介绍。充分理解线性情况对于更好地理解非线性情况至关重要。
 
 本章还引入了一个重要概念————**平稳分布**。平稳分布在价值函数近似法中定义合适的目标函数时扮演着重要角色，在第 9 章我们用函数近似策略时，它也将起到关键作用。
+
+
+
+## Lec9 Policy Gradient Methods
+函数近似的思想不仅可以应用于state/action value的计算上，还可以应用在策略的表示上。在本书中，策略此前一直以表格形式表示：所有状态的动作概率都存储在表格中（例如表 9.1）。本章将展示，**策略可由参数化函数表示**，记为\(\pi(a|s,\theta)\)，其中\(\theta \in \mathbb{R}^m\)是参数向量。
+
+当策略以函数形式表示时，可通过优化某些标量指标（scalar metrics）来获得最优策略。这类方法称为**策略梯度**。策略梯度方法是本书的一大进步，因为它是基于策略的。相比之下，本书前几章讨论的均为基于价值的方法。策略梯度方法具有诸多优势，例如，它在处理大规模状态 / 动作空间时效率更高，泛化能力更强，因此在样本使用效率上也更具优势。
+
+![My Local Image](./picture/9.1.png)
+
+
+### 9.1 Policy representation: From table to function
+当策略的表示方式从表格切换为函数时，有必要明确这两种表示方法的区别。
+1. **如何定义最优策略？**
+   以表格形式表示时，若一个策略能最大化每个状态价值，则被定义为最优；以函数形式表示时，若一个策略能**最大化某些scalar metrics**，则被定义为最优。
+2. **如何更新策略？**
+   以表格形式表示时，可通过直接修改表格中的条目来更新策略；以参数化函数形式表示时，策略无法再以此方式更新，而只能通过**改变参数**$θ$来更新。
+3. **如何获取动作的概率？**
+   在表格情形下，可通过直接查找表格中对应的条目来获取动作的概率；在函数表示情形下，需要将$(s,a)$输入函数来计算其概率（见图 9.2 (a)）。根据函数的结构，我们也可以输入一个状态，然后输出所有动作的概率（见图 9.2 (b)）。
+
+基于上述的区别，可以给出policy gradient的i基本思想：假设$J(\theta)$是我们需要的scalar metrics，通过基于梯度的算法优化该指标，即可获得最优策略：
+\[\theta_{t+1} = \theta_t + \alpha \nabla_\theta J(\theta_t)\]
+其中$\nabla_\theta J$是$J$关于$\theta$的梯度，$t$是时间步，$\alpha$是优化步长（学习率）。
+
+后边几节基于上述基本思想，会详细介绍算法。
+
+
+### 9.2 Metrics for defining optimal policies
+当策略由函数表示时，定义最优策略的指标有两类：一类基于状态价值，另一类基于即时奖励。
+#### Metric 1:Average state value
+第一种指标是average state value，或简称为average value，其**定义为**：
+$$\bar{v}_\pi = \sum_{s \in \mathcal{S}} d(s) v_\pi(s)$$
+其中$d(s)$是状态$s$的权重。它满足：对任意$s\in \mathcal{S}$,$d(s)\leq 0$,且$\sum_{s\in \mathcal {S}}d(s)=1$。在另一个角度，$d(s)$其实就是状态$s$的概率分布（probability distribution）。此时，该指标**也可写作**：
+\[\bar{v}_\pi = \mathbb{E}_{S \sim d} [v_\pi(S)]\]
+如何去选取$d$的分布呢？这是一个重要问题，主要分为两种情况：
+
+* 第一种也是最简单的情况是，$d$**与策略**$π$**无关**
+  此时，我们将其记为$d_0$,对应的平均价值记为$\bar{v}_{\pi}^0$**以表明该分布与策略无关**。
+  * 一种情形是将所有状态视为同等重要，选择\(d_0(s) = 1/|\mathcal{S}|\)
+  * 另一种情形是仅关注特定状态$s_0$（例如，智能体始终从$s_0$出发），此时可设计：\(d_0(s_0) = 1,\ d_0(s \ne s_0) = 0\)
+  
+
+* 第二种情况是$d$**依赖于策略**$π$
+  在这种情况下，通常选择$d$为$d_{\pi}$，即策略 $\pi$下的平稳分布。而根据前一章关于平稳分布的知识，$d_{\pi}$**一个基本性质**应该满足：
+  \[d_\pi^T P_\pi = d_\pi^T\]
+
+  为什么选择平稳分布呢？
+  平稳分布反映了马尔可夫决策过程在给定策略下的长期行为。如果某个状态在长期中被频繁访问，它就更重要，应被赋予更高的权重；如果某个状态很少被访问，其重要性就较低，应被赋予更低的权重。
+
+顾名思义，$\bar{v}_{\pi}$是状态价值的加权平均。不同的$\theta$值会导致不同的$\bar{v}_{\pi}$值。我们的最终目标是找到一个最优策略（最优的$\theta$）,来最大化我们的metrics $\bar{v}_{\pi}$
+
+接下来，我们介绍$\bar{v}_{\pi}$的另外两个重要等价表达式，这在论文中更加常见。
+* 假设智能体遵循给定策略$\pi(\theta)$收集奖励$\{R_{t+1}\}_{t=0}^{\infty}$读者在文献中可能经常看到如下指标：
+  \[J(\theta) = \lim_{n \to \infty} \mathbb{E}\left[ \sum_{t=0}^n \gamma^t R_{t+1} \right] = \mathbb{E}\left[ \sum_{t=0}^\infty \gamma^t R_{t+1} \right]\tag{9.1}\]
+
+  这个指标初看可能不易理解。事实上，它与$\bar{v_{\pi}}$是等价的。为了说明这一点，我们有：
+  $$
+  \begin{align*}
+  \mathbb{E}\left[ \sum_{t=0}^\infty \gamma^t R_{t+1} \right]
+  &=\sum_{s \in \mathcal{S}}d(s)\mathbb{E}\left[ \sum_{t=0}^\infty \gamma^t R_{t+1} \mid S_0 = s \right]\\
+  &=\sum_{s \in \mathcal{S}}d(s)v_{\pi}(s)\\
+  &=\bar{v}_{\pi}
+  \end{align*}
+  $$
+  上述等式中的第一个等号是由于**全期望公式**，第二个等号则是根据**状态价值的定义**。
+* metric $\bar{v}_{\pi}$ 也可以被重写为两个向量的内积。具体来说，令：
+  \[
+  \begin{align*}
+  v_\pi &= \left[ \dots, v_\pi(s), \dots \right]^T \in \mathbb{R}^{|\mathcal{S}|}\\
+  d &= \left[ \dots, d(s), \dots \right]^T \in \mathbb{R}^{|\mathcal{S}|}
+  \end{align*}
+  \]
+  那么我们就有：
+  $$\bar{v}_{\pi}=d^Tv_{\pi}$$
+  这个表示在我们分析**梯度计算**时很有用。
+  
+#### Metric 2: Average reward
+第二种指标是平均单步奖励（average one-step reward），或简称为平均奖励(avarge reward)。其定义为：
+$$
+\begin{align*}
+\bar{r}_\pi &\doteq \sum_{s \in \mathcal{S}} d_\pi(s) r_\pi(s)\\
+&= \mathbb{E}_{S \sim d_\pi} [r_\pi(S)]\tag{9.2}
+\end{align*}
+$$
+其中$d_{\pi}$是平稳分布，而
+$$
+r_\pi(s) \doteq \sum_{a \in \mathcal{A}} \pi(a|s,\theta) r(s,a)\tag{9.3}
+$$
+是即时奖励的期望。这里，\(r(s,a) \doteq \mathbb{E}[R|s,a] = \sum_r r p(r|s,a)\)
+
+事实上，$r(s,a)$对$a$求期望得到了$r_\pi(s)$，而$r_\pi(s)$对于$s$求期望就得到了metric:$\bar{r}_\pi$。
+
+接下来，我们给出$\bar{r}_\pi$的另外两个重要等价表达式:
+
+* 假设智能体遵循给定策略$\pi(\theta)$收集奖励$\{R_{t+1}\}_{t=0}^\infty$。读者在文献中常见的一个指标是：
+  $$J(\theta) = \lim_{n \to \infty} \frac{1}{n} \mathbb{E}\left[ \sum_{t=0}^{n-1} R_{t+1} \right]\tag{9.4}$$
+  这个指标初看可能不易理解。事实上，它与$\bar{r}_\pi$等价：
+  $$\lim_{n \to \infty} \frac{1}{n} \mathbb{E}\left[ \sum_{t=0}^{n-1} R_{t+1} \right] = \sum_{s \in \mathcal{S}} d_\pi(s) r_\pi(s) = \bar{r}_\pi\tag{9.5}$$
+  式 (9.5) 的证明见框 9.1。
+
+
+* 式 (9.2) 中的平均奖励$\bar{r}_\pi$也可写作两个向量的内积。具体来说，令：
+  $$
+  \begin{align*}
+  r_\pi = \left[ \dots, r_\pi(s), \dots \right]^T \in \mathbb{R}^{|\mathcal{S}|}\\
+  d_\pi = \left[ \dots, d_\pi(s), \dots \right]^T \in \mathbb{R}^{|\mathcal{S}|}
+  \end{align*}
+  $$
+  其中$r_{\pi}(s)$由式 (9.3) 定义。于是，显然有：
+  $$\bar{r}_\pi = \sum_{s \in \mathcal{S}} d_\pi(s) r_\pi(s) = d_\pi^T r_\pi$$
+  这个表达式在我们**推导其梯度**时会非常有用。
+
+
+#### Some remarks
+![My Local Image](./picture/9.2.png)
+到目前为止，我们已经介绍了两类指标：$\bar{v}_\pi$和$\bar{r}_\pi$	。每个指标都有几种不同但等价的表达式，它们总结在表 9.2 中。
+
+我们有时用$\bar{v}_\pi$特指状态分布为平稳分布 $d_{\pi}$的情形，用$\bar{v}_{\pi}^0$指代$d_0$与$\pi$独立的情形，下面给出关于这些指标的一些补充说明。
+
+* 所有的这些**metrics本质上都是**$\pi$**的函数**。由于策略$\pi$有由$\theta$参数化，因此这些指标也是θ的函数。而我们的核心目标就是去搜索最优的参数$\theta$来最大化设置的metrics。这就是策略梯度方法的基本思想。
+* 事实上，基于state value和reward设置的metrics其实是**等价的**。
+  在折扣因子$\gamma\leq1$的折扣情形下，$\bar{v}_\pi$**和**$\bar{r}_\pi$**是等价的**，具体来说可以证明：
+  $$\bar{r}_\pi=(1-\gamma)\bar{v}_\pi$$
+  上述等式表明，这**两个指标可以同时被最大化**。该等式的证明将在后面的引理 9.1 中给出。
+
+
+  
+### 9.3 Gradients of the metrics
+基于上一节介绍的指标，我们可以使用基于梯度的方法来最大化它们。为此，我们需要首先计算这些指标的梯度。本章最重要的理论结果是如下定理：
+
+##### Theorem 9.1 (Policy gradient theorem)
+$J(\theta)$的梯度公式如下：
+$$
+\nabla_\theta J(\theta) = \sum_{s \in \mathcal{S}} \eta(s) \sum_{a \in \mathcal{A}} \nabla_\theta \pi(a|s,\theta) q_\pi(s,a)\tag{9.8}
+$$
+其中$\eta$是状态分布，$\nabla_\theta \pi$是策略$\pi$关于$\theta$的梯度。此外，式子（9.8）可以用期望的形式紧凑地表示为：
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{S \sim \eta, A \sim \pi(S,\theta)} \big[ \nabla_\theta \ln \pi(A|S,\theta) q_\pi(S, A) \big]\tag{9.9}
+$$
+其中$ln$是自然对数。
+
+下面给出关于定理 9.1 的一些重要说明：
+* 定理 9.1 是对定理 9.2、9.3 和 9.5 结果的**总结**。这三个定理分别针对不同场景（不同metrics、discounted / undiscounted）。这些场景下的梯度表达式形式相似，因此被总结在定理 9.1 中。
+
+  实际使用时只需要将**不同的指标代入作为**$J(\theta)$即可，可以是$\bar{v}_\pi^0、\bar{v}_\pi、\bar{r}_\pi$。代入不同的值，式子（9.8）中对应的等号可能是严格相等，也可能是近似，对应的分布$\eta$在不同场景下也会有所不同。
+
+* 梯度的推导是策略梯度方法中最复杂的部分。对大多数读者而言，熟悉定理 9.1 的结论即可，无需掌握其证明。本节后续的推导细节对数学要求较高，建议读者根据自身兴趣选择性学习。
+  
+* 式 (9.9) 比 (9.8) 更受青睐，因为它以期望的形式表达。我们将在 9.4 节中说明，这个真实梯度可以通过随机梯度来近似。
+
+* 为什么 (9.8) 可以表示为 (9.9)？证明如下。根据期望的定义，(9.8) 可重写为：
+  $$
+  \begin{align*}
+  \nabla_\theta J(\theta) 
+  &=\sum_{s \in \mathcal{S}} \eta(s) \sum_{a \in \mathcal{A}} \nabla_\theta \pi(a|s,\theta) q_\pi(s,a)\\
+  &= \mathbb{E}_{S \sim \eta} \big[ \sum_{a \in \mathcal{A}}\nabla_\theta \pi(a|S,\theta) q_\pi(S, a) \big]
+  \end{align*}\tag{9.10}
+  $$
+  其中可以根据$\ln\pi(a|s,\theta)$的梯度进一步化简式子：
+  $$\nabla_\theta \ln \pi(a|s,\theta) = \frac{\nabla_\theta \pi(a|s,\theta)}{\pi(a|s,\theta)}$$
+  由此可得：
+  $$\nabla_\theta \pi(a|s,\theta)=\pi(a|s,\theta)\nabla_\theta \ln \pi(a|s,\theta)\tag{9.11}$$
+  将上式9.11代入9.10可得：
+  $$
+  \begin{align*}
+  \nabla_\theta J(\theta) 
+  &=\mathbb{E} \big[ \sum_{a \in \mathcal{A}}\pi(a|S,\theta) \nabla_\theta \ln \pi(a|S,\theta)q_\pi(S, a) \big]\\
+  &= \mathbb{E}_{S \sim \eta, A \sim \pi(S,\theta)} \big[ \nabla_\theta \ln \pi(A|S,\theta) q_\pi(S, A) \big]
+  \end{align*}
+  $$
+  上面利用$\ln$的梯度去化简梯度式子，目的是为了将metric的**梯度写成一个期望形式**（对于s和a），这样在实际中，方便使用**SGD算法**去用采样代替期望。
+
+* 需要注意的是，为了保证$\ln \pi(a|s,\theta)$有意义，$\pi(a|s,\theta)$必须对所有$(s,a)$都为正。这可以通过使用 **softmax 函数**来实现：
+  $$\pi(a|s,\theta) = \frac{e^{h(s,a,\theta)}}{\sum_{a' \in \mathcal{A}} e^{h(s,a',\theta)}}\tag{9.12}$$
+  其中$h(s,a,\theta)$是表示在状态$s$下选择动作$a$偏好的函数。式 (9.12) 中的策略满足$\pi(a|s,\theta)\in (0,1)$,且$\sum_{a\in\mathcal{A}}\pi(a|s,\theta)=1$(对于任意的$s\in \mathcal{S}$)。
+
+
+  softmax函数实际上是在**归一化（标准化）**，将$（-\infty,\infty）$的向量投射到$(0,1)$上，但不会严格等于0或1。
+
+
+  该策略可**通过神经网络实现**：网络输入为$s$,输出层为 softmax 层，网络对于所有的$a$输出$\pi(a|s,\theta)$，且和为1。由于对于所有的$a$都有$\pi(a|s,\theta)>0$，故**策略是随机的（stochastic），**因此**具有探索性（exploratory）**。策略不会直接指示采取哪个动作，而是应根据策略的概率分布来生成动作。
+
+
+  实际中还有**deterministic policy gradient（DPG）**的方法，用来解决**神经网络输出为无穷**的情形。
+
+
+#### 9.3.1 Derivation of the gradients in the discounted case
+接下来就来分析第一种情况，discounted下的梯度计算$\gamma\in(0,1)$。
+折扣情形下的state value和action value定义为：
+$$
+\begin{align*}
+v_\pi(s) &= \mathbb{E}\big[ R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \mid S_t = s \big]\\
+q_\pi(s,a) = \mathbb{E}\big[ R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \mid S_t = s, A_t = a \big]
+\end{align*}
+$$
+
+有$v_\pi(s)=\sum_{a\in A}\pi(a|s,\theta)q_\pi(s,a)$，且state value是满足BE的。
+
+首先我们可以证明$\bar{v}_{\pi}(\theta)$和$\bar{r}_\pi(\theta)$是等价的。
+
+##### Lemma 9.1 $\bar{v}_{\pi}(\theta)$和$\bar{r}_\pi(\theta)$等价性
+在discounted的情形下$(\gamma\in (0,1))$，满足：
+$$\bar{v}_{\pi}(\theta)=(1-\gamma)\bar{r}_\pi(\theta)\tag{9.13}$$
+**证明：**
+我们注意到$\bar{v}_\pi(\theta)=d_{\pi}^T v_\pi$,$\bar{r}_\pi(\theta)=d_{\pi}^T r_\pi$,而其中$v_\pi$和$r_\pi$满足贝尔曼方程$v_\pi=r_\pi+\gamma P_\pi v_\pi$
+在方程的两边同时左乘$d_\pi^T$得到：
+$$\bar{v}_\pi = \bar{r}_\pi + \gamma d_\pi^T P_\pi v_\pi = \bar{r}_\pi + \gamma d_\pi^T v_\pi = \bar{r}_\pi + \gamma \bar{v}_\pi$$
+其中第二个等号运用了$d_\pi^T$的性质：$d_\pi^T P_\pi=d_\pi^T$，进一步合并同类项得到上述（9.13）。
+
+##### Lemma 9.2 $v_\pi$的梯度
+在discounted情形下，对于任意$s\in\mathcal{S}$有：
+$$\nabla_\theta v_\pi(s) = \sum_{s' \in \mathcal{S}} \Pr_\pi(s'|s) \sum_{a \in \mathcal{A}} \nabla_\theta \pi(a|s',\theta) q_\pi(s',a)\tag{9.14}$$
+其中：
+$$\Pr_\pi(s'|s) \doteq \sum_{k=0}^\infty \gamma^k [P_\pi^k]_{ss'} = \big[ (I_n - \gamma P_\pi)^{-1} \big]_{ss'}$$
+是策略$\pi$ 下从状态$s$转移到$s'$的（discounted total probability）折扣总概率。这里，$[.]_{ss'}$表示第$s$行第$s'$列的元素，$[P_\pi^k]_{ss'}$是策略$\pi$下恰好经过$k$步从$s$转移到$s'$的概率。
+
+详细的证明参考书P201。
+
+基于引理9.2,我们可以推导出$\bar{v}_\pi^0$的梯度。
+
+##### Theorem 9.2 折扣下$\bar{v}_\pi^0$的梯度
+在折扣条件下$\gamma\in(0,1)$，$\bar{v}_\pi^0=d_0^T v_\pi$的梯度为：
+$$\nabla_\theta \bar{v}_\pi^0 = \mathbb{E}\big[ \nabla_\theta \ln \pi(A|S,\theta) q_\pi(S, A) \big]$$
+
+其中$S\sim \rho_\pi,A \sim \pi(S,\theta)$。这里的状态分布$\rho_\pi$定义为：
+$$\rho_\pi(s) = \sum_{s' \in \mathcal{S}} d_0(s') \Pr_\pi(s|s')，s\in \mathcal{S}\tag{9.19}$$
+其中
+$$\Pr_\pi(s|s') = \sum_{k=0}^\infty \gamma^k [P_\pi^k]_{s's} = \big[(I - \gamma P_\pi)^{-1}\big]_{s's}$$
+是策略$\pi$下从$s'$转移到$s$的折扣总概率。
+
+利用引理 9.1 和引理 9.2，我们可以推导出$\bar{v}_\pi$**和**$\bar{r}_\pi$**的梯度：**
+
+##### Theorem 9.3 折扣下$\bar{r}_\pi$和$\bar{v}_\pi$的梯度
+在折扣条件下$\gamma\in(0,1)$，$\bar{r}_\pi$和$\bar{v}_\pi$的梯度为：
+$$
+\begin{align*}
+\nabla_\theta \bar{r}_\pi = (1 - \gamma) \nabla_\theta \bar{v}_\pi
+& \approx \sum_{s \in \mathcal{S}} d_\pi(s) \sum_{a \in \mathcal{A}} \nabla_\theta \pi(a|s,\theta) q_\pi(s,a)\\
+&=\mathbb{E}\big[ \nabla_\theta \ln \pi(A|S,\theta) q_\pi(S, A) \big]
+\end{align*}
+$$
+
+其中$S\sim d_\pi,A \sim \pi(S,\theta)$。这里，当$\gamma$越接近1时，近似的精度越高。
+
+具体的证明参考书P203，204。
+
+实际中，我们只需要**掌握理解式子（9.10）即可**，因为引理9.1、9.2和定理9.2、9.3等具体的表达式都可以总结写成（9.10）的形式。
+#### 9.3.2 Derivation of the gradients in the undiscounted case
+这里略过去，如有需要，参见书P205
+
+
+
+### 9.4 Monte Carlo policy gradient (REINFORCE)
+利用定理 9.1 给出的梯度，我们接下来展示如何使用基于梯度的方法优化目标函数，以获得最优策略。
+
+用于最大化$J(\theta)$的梯度上升算法为：
+$$
+\begin{align*}
+\theta_{t+1} 
+&=\theta_t + \alpha\eta_\theta J(\theta_t)\\
+&= \theta_t + \alpha \mathbb{E}\big[\nabla_\theta \ln \pi(A|S, \theta_t) q_\pi(S, A)\big] \tag{9.31}
+\end{align*}
+$$
+其中$\alpha>0$是常数学习率。实际中我们使用随机梯度来替代式子中真实的梯度：
+$$\theta_{t+1} = \theta_t + \alpha \nabla_\theta \ln \pi(a_t|s_t, \theta_t) q_t(s_t, a_t) \tag{9.32}$$
+需要注意的是，（9.32）已经对于（9.31）中无法获得的$q_\pi(s_t,a_t)$进行了近似，即$q_t(s_t,a_t)$。这个近似计算的不同方法引出了不同的算法。
+
+如果$q_t(s_t,a_t)$是通过蒙特卡洛估计得到的，该算法就被称为 **REINFORCE** 或 **Monto Carlo policy gradient**，它是最早且最简单的策略梯度算法之一。
+
+式 (9.32) 中的算法非常重要，因为许多其他策略梯度算法都可以通过对它进行扩展得到。接下来我们更细致地考察式 (9.32) 的含义。
+
+由于$\nabla_\theta \ln \pi(a|s,\theta) = \frac{\nabla_\theta \pi(a|s,\theta)}{\pi(a|s,\theta)}$，代入（9.32）可以得到：
+$$\theta_{t+1} = \theta_t + \alpha \underbrace{\left( \frac{q_t(s_t, a_t)}{\pi(a_t|s_t, \theta_t)} \right)}_{\beta_t} \nabla_\theta \pi(a_t|s_t, \theta_t)$$
+进一步简化为：
+$$\theta_{t+1} = \theta_t + \alpha \beta_t \nabla_\theta \pi(a_t|s_t, \theta_t) \tag{9.33}$$
+
+从这个方程中可以看到两个重要的解释。
+首先，由于式 (9.33) 是一个简单的梯度上升算法，我们可以得到如下观察：
+
+* 若$\beta_t\geq 0$,则选择$(s_t,a_t)$的概率会被增强，即$\pi(a_t|s_t, \theta_{t+1})\geq \pi(a_t|s_t, \theta_t)$,$\beta_t$越大，这种增强效果越强。
+* 若$\beta_t\leq 0$,则选择$(s_t,a_t)$的概率会降低，即$\pi(a_t|s_t, \theta_{t+1})\leq \pi(a_t|s_t, \theta_t)$
+
+
+上述**结论的证明如下**：
+当$\theta_{t+1}-\theta_t$足够小时，由于泰勒展开可得：
+$$
+\begin{aligned}
+\pi(a_t|s_t, \theta_{t+1}) &\approx \pi(a_t|s_t, \theta_t) + \big(\nabla_\theta \pi(a_t|s_t, \theta_t)\big)^T (\theta_{t+1} - \theta_t) \\
+&= \pi(a_t|s_t, \theta_t) + \alpha \beta_t \big(\nabla_\theta \pi(a_t|s_t, \theta_t)\big)^T \big(\nabla_\theta \pi(a_t|s_t, \theta_t)\big) \quad (\text{代入式 (9.33)}) \\
+&= \pi(a_t|s_t, \theta_t) + \alpha \beta_t \|\nabla_\theta \pi(a_t|s_t, \theta_t)\|_2^2.
+\end{aligned}
+$$
+由上式，上述观察是显然的。
+
+此外，该算法在一定程度上可以在 **探索（exploration）与利用（exploitation）** 之间取得平衡，这源于$\beta_t$的表达式：
+$$\beta_t=\frac{q_t(s_t, a_t)}{\pi(a_t|s_t, \theta_t)}$$
+* 一方面,$\beta_t$与$q_t(s_t,a_t)$成正比，当$(s_t,a_t)$的action value近似较大时，$\beta_t$会相应的变化，代入算法后，$\pi(a_t|s_t,\theta)$会被增大，从而选择$a_t$的概率提高。算法会尝试**利用价值更高的动作**。
+* 另一方面，当$q_t(s_t,a_t)>0$时，$\beta_t$与$\pi(a_t|s_t,\theta)$成反比。如果选择$a_t$的概率很小，$\pi(a_t|s_t,\theta)$就会被增大，从而增大选择$a_t$的概率。算法会尝试**探索概率较低的动作**。
+
+所以该算法兼顾了探索和利用性，二者相互平衡。
+
+下面给出了详细的算法流程图：
+![My Local Image](./picture/9.3.png)
+
+补充一下**算法实现的细节**：
+* **如何采样$S$**:
+  真实梯度$\mathbb{E}\big[\nabla_\theta \ln \pi(A|S, \theta_t) q_\pi(S, A)\big]$中的$S$应该服从分布$\eta$，这个分布可以是平稳分布$d_\pi$或者折扣总概率分布$\rho_\pi$（见式（9.19））。$d_\pi$和$\rho_\pi$都代表策略$\pi$下的长期行为。
+
+* **如何采样$A$**:
+  真实梯度$\mathbb{E}\big[\nabla_\theta \ln \pi(A|S, \theta_t) q_\pi(S, A)\big]$中的$A$
+  应服从分布$\pi(A|S, \theta_t)$。采样$A$的理想方式按照$\pi(a|s, \theta_t)$选择$a_t$。因此,**策略梯度算法是on-policy**的。
+
+遗憾的是，在实践中，由于**样本使用效率较低**，上述采样$S$和$A$理想方式并未被严格遵循。式 (9.32) 的一种更具样本效率的实现方式在算法 9.1 中给出。
+
+在算法9.1中，首先按照策略$\pi(\theta)$生成一个 episode，然后使用 episode 中的每一条经验样本对$\theta$进行多次更新。
+
+
+### 9.5 Summary
+本章介绍了策略梯度方法，它是许多现代强化学习算法的基础。策略梯度方法属于基于策略（policy-based） 的方法，这是本书的一大重要进展 —— 因为前几章介绍的所有方法均为基于价值（value-based） 的方法。策略梯度方法的核心思想十分简洁：选取一个合适的标量指标，然后通过梯度上升算法对其进行优化。
+
+策略梯度方法中最复杂的部分是指标梯度的推导过程。这是因为我们必须区分不同指标对应的各类场景，以及有折扣 / 无折扣两种情况。幸运的是，不同场景下的梯度表达式具有相似性。因此，我们将这些表达式总结在**定理 9.1** 中 —— 这也是本章最重要的理论结论。对于多数读者而言，只需理解该定理的核心内容即可；其证明过程并非易事，不要求所有读者都深入钻研。
+
+必须透彻理解**式 (9.32) 中的策略梯度算法**，因为它是许多高级策略梯度算法的基础。在下一章中，该算法将被拓展为另一种重要的策略梯度方法，即actor-critic算法。即使用TD算法去计算$q_t(s_t,a_t)$。
