@@ -1,10 +1,10 @@
 - [Lec1 基本概念](#lec1-基本概念)
   - [1.State](#1state)
   - [2.Action](#2action)
-    - [Action space:一个状态所有可能的action集合。$A(s\_i)={a\_i},i=1...5$](#action-space一个状态所有可能的action集合as_ia_ii15)
+    - [Action space:一个状态所有可能的action集合。$A(s_i)={a_i},i=1...5$](#action-space一个状态所有可能的action集合as_ia_ii15)
   - [3.State transition(状态转换) $p(s'|s,a)$](#3state-transition状态转换-pssa)
     - [State transition probability:使用条件概率来表示。](#state-transition-probability使用条件概率来表示)
-  - [3.Policy $\\pi(a|s)$](#3policy-pias)
+  - [3.Policy $\pi(a|s)$](#3policy-pias)
   - [4.Reward(most unique) $p(r|s,a)$](#4rewardmost-unique-prsa)
   - [5.Trajectory and Return(轨迹和反馈)](#5trajectory-and-return轨迹和反馈)
   - [6.Discounted return](#6discounted-return)
@@ -18,7 +18,7 @@
       - [关于Bellman equation的几个要点：](#关于bellman-equation的几个要点)
   - [3.Examples to illustrate bellman equation](#3examples-to-illustrate-bellman-equation)
   - [4.Matrix-vector form of the Bellman equation](#4matrix-vector-form-of-the-bellman-equation)
-      - [其中矩阵$P\_\\pi$有一些有趣的特性：](#其中矩阵p_pi有一些有趣的特性)
+      - [其中矩阵$P_\pi$有一些有趣的特性：](#其中矩阵p_pi有一些有趣的特性)
   - [5.Solving Bellman equation](#5solving-bellman-equation)
   - [6.Action value](#6action-value)
       - [需要注意的是:](#需要注意的是)
@@ -33,12 +33,12 @@
       - [Theorem 3.4.1](#theorem-341)
       - [Theorem 3.4.2(Contraction property of f(v))](#theorem-342contraction-property-of-fv)
     - [3.5 Sovling an optimal policy from BOE](#35-sovling-an-optimal-policy-from-boe)
-      - [${v}^{\*}$的求解](#v的求解)
-      - [${\\pi}^{\*}$的求解](#pi的求解)
-      - [Theorem 3.5.1（ $v^*$与$\\pi^*$的最优性）](#theorem-351-v与pi的最优性)
+      - [$v^*$的求解](#v的求解)
+      - [$\pi^*$的求解](#pi的求解)
+      - [Theorem 3.5.1（ $v^*$与$\pi^*$的最优性）](#theorem-351-v与pi的最优性)
       - [Theorem 3.5.2（Greedy optimal policy）](#theorem-352greedy-optimal-policy)
     - [3.6 Factors that influence optimal policy](#36-factors-that-influence-optimal-policy)
-      - [impact of discount rate $\\gamma$](#impact-of-discount-rate-gamma)
+      - [impact of discount rate $\gamma$](#impact-of-discount-rate-gamma)
       - [impact of reward values](#impact-of-reward-values)
 - [Lec4 Value Iteration \& Policy Iteration(值迭代\&策略迭代算法)](#lec4-value-iteration--policy-iteration值迭代策略迭代算法)
   - [4.1 Value iteration algorithm](#41-value-iteration-algorithm)
@@ -53,8 +53,8 @@
     - [4.2.2 Illustrative examples](#422-illustrative-examples)
   - [4.3 Truncated policy iteration algorithm](#43-truncated-policy-iteration-algorithm)
     - [4.3.1 Comparing value iteration and policy iteration](#431-comparing-value-iteration-and-policy-iteration)
-      - [值迭代对应是**j=1**的截断策略迭代；](#值迭代对应是j1的截断策略迭代)
-      - [策略迭代对应的是**j趋于**$\\infty$ 的截断策略迭代。](#策略迭代对应的是j趋于infty-的截断策略迭代)
+      - [值迭代对应是j=1的截断策略迭代；](#值迭代对应是j1的截断策略迭代)
+      - [策略迭代对应的是j趋于$\infty$ 的截断策略迭代。](#策略迭代对应的是j趋于infty-的截断策略迭代)
     - [4.3.2 Truncated policy iteration algorithm](#432-truncated-policy-iteration-algorithm)
 - [Lec5 Monte Carlo Learning](#lec5-monte-carlo-learning)
   - [5.1 Motivating example: Mean estimation](#51-motivating-example-mean-estimation)
@@ -66,10 +66,10 @@
     - [5.3.1 Utilizing samples more effeciently](#531-utilizing-samples-more-effeciently)
     - [5.3.2 Updating polices more efficiently](#532-updating-polices-more-efficiently)
     - [5.3.3 MC Exploring Starts Algorithm](#533-mc-exploring-starts-algorithm)
-  - [5.4 MC $\\epsilon$-Greedy:Learning without expolring starts](#54-mc-epsilon-greedylearning-without-expolring-starts)
-    - [5.4.1 $\\epsilon$-greedy policies](#541-epsilon-greedy-policies)
+  - [5.4 MC $\epsilon$-Greedy:Learning without expolring starts](#54-mc-epsilon-greedylearning-without-expolring-starts)
+    - [5.4.1 $\epsilon$-greedy policies](#541-epsilon-greedy-policies)
     - [5.4.2 Algorithm description](#542-algorithm-description)
-  - [5.5 Exploration and expolitation of $\\epsilon$-greedy policies](#55-exploration-and-expolitation-of-epsilon-greedy-policies)
+  - [5.5 Exploration and expolitation of $\epsilon$-greedy policies](#55-exploration-and-expolitation-of-epsilon-greedy-policies)
 - [Lec6 Stochastic Approximation](#lec6-stochastic-approximation)
   - [6.1 Motivating example:Mean estimation](#61-motivating-examplemean-estimation)
   - [6.2 Robbins-Monro algorithm](#62-robbins-monro-algorithm)
@@ -124,13 +124,28 @@
   - [9.3 Gradients of the metrics](#93-gradients-of-the-metrics)
       - [Theorem 9.1 (Policy gradient theorem)](#theorem-91-policy-gradient-theorem)
     - [9.3.1 Derivation of the gradients in the discounted case](#931-derivation-of-the-gradients-in-the-discounted-case)
-      - [Lemma 9.1 $\\bar{v}_{\\pi}(\\theta)$和$\\bar{r}_\\pi(\\theta)$等价性](#lemma-91-barvpitheta和barrpitheta等价性)
-      - [Lemma 9.2 $v\_\\pi$的梯度](#lemma-92-v_pi的梯度)
-      - [Theorem 9.2 折扣下$\\bar{v}\_\\pi^0$的梯度](#theorem-92-折扣下barv_pi0的梯度)
-      - [Theorem 9.3 折扣下$\\bar{r}_\\pi$和$\\bar{v}_\\pi$的梯度](#theorem-93-折扣下barrpi和barvpi的梯度)
+      - [Lemma 9.1 $\bar{v}_{\pi}(\theta)$和$\bar{r}_\pi(\theta)$等价性](#lemma-91-barvpitheta和barrpitheta等价性)
+      - [Lemma 9.2 $v_\pi$的梯度](#lemma-92-v_pi的梯度)
+      - [Theorem 9.2 折扣下$\bar{v}_\pi^0$的梯度](#theorem-92-折扣下barv_pi0的梯度)
+      - [Theorem 9.3 折扣下$\bar{r}_\pi$和$\bar{v}_\pi$的梯度](#theorem-93-折扣下barrpi和barvpi的梯度)
     - [9.3.2 Derivation of the gradients in the undiscounted case](#932-derivation-of-the-gradients-in-the-undiscounted-case)
   - [9.4 Monte Carlo policy gradient (REINFORCE)](#94-monte-carlo-policy-gradient-reinforce)
   - [9.5 Summary](#95-summary)
+- [Lec10 Actor-Critic Methods](#lec10-actor-critic-methods)
+  - [10.1 The simplest actor-critic algorithm (QAC)](#101-the-simplest-actor-critic-algorithm-qac)
+  - [10.2 Advantage actor-critic (A2C)](#102-advantage-actor-critic-a2c)
+    - [10.2.1 Baseline invariance](#1021-baseline-invariance)
+    - [10.2.2 Algorithm description](#1022-algorithm-description)
+  - [10.3 Off-policy actor-critic](#103-off-policy-actor-critic)
+    - [10.3.1 Importance sampling](#1031-importance-sampling)
+    - [10.3.2 The off-policy policy gradient theorem](#1032-the-off-policy-policy-gradient-theorem)
+      - [Theorem 10.1 Off-policy policy gradient theorem(off-policy策略梯度定理)](#theorem-101-off-policy-policy-gradient-theoremoff-policy策略梯度定理)
+    - [10.3.3 Algorithm description](#1033-algorithm-description)
+  - [10.4 Deterministic actor-critic](#104-deterministic-actor-critic)
+    - [10.4.1 The deterministic policy gradient theorem](#1041-the-deterministic-policy-gradient-theorem)
+      - [Theorem 10.2 Deterministic policy gradient theorem（确定性策略梯度定理）](#theorem-102-deterministic-policy-gradient-theorem确定性策略梯度定理)
+    - [10.4.2 Algorithm description](#1042-algorithm-description)
+  - [10.5 Summary](#105-summary)
 
 ## Lec1 基本概念
 
@@ -492,7 +507,7 @@ $$\|f(v_1)-f(v_2)\|_\infty \le \gamma\|v_1-v_2\|_\infty$$
 
 #### 3.5 Sovling an optimal policy from BOE
 使用上述压缩映射工具可以对于BOE进行分析求解最优状态$v^*$和最优策略$\pi^*$。
-##### ${v}^{*}$的求解
+##### $v^*$的求解
 如果$v^*$是BOE的解，那么其满足
 $$v^*=f(v^*)=\max_{\pi \in \Pi} (r_{\pi} + \gamma P_{\pi} v^*)\tag{3.5}$$
 显然$v^*$就是一个不动点，故BOE的解一定存在同时还是唯一的。由压缩映射定理的性质，我们可以通过递推算法求解这个$v^*$
@@ -501,7 +516,7 @@ $$v_{k+1} = f(v_k) = \max_{\pi \in \Pi} \left( r_\pi + \gamma P_\pi v_k \right),
 
 这个迭代算法即被称为值迭代（value iteration）
 
-##### ${\pi}^{*}$的求解
+##### $\pi^*$的求解
 当$v^*$已经求得，我们很容易通过求解下面这个方程得到$\pi^*$：
 $$\pi^*=\arg \max_{\pi \in \Pi}(r_\pi+\gamma P_\pi v^*) \tag{3.6}$$
 将得到的$\pi^*$代入上述(3.6)式，得到：
@@ -2073,3 +2088,274 @@ $$\beta_t=\frac{q_t(s_t, a_t)}{\pi(a_t|s_t, \theta_t)}$$
 策略梯度方法中最复杂的部分是指标梯度的推导过程。这是因为我们必须区分不同指标对应的各类场景，以及有折扣 / 无折扣两种情况。幸运的是，不同场景下的梯度表达式具有相似性。因此，我们将这些表达式总结在**定理 9.1** 中 —— 这也是本章最重要的理论结论。对于多数读者而言，只需理解该定理的核心内容即可；其证明过程并非易事，不要求所有读者都深入钻研。
 
 必须透彻理解**式 (9.32) 中的策略梯度算法**，因为它是许多高级策略梯度算法的基础。在下一章中，该算法将被拓展为另一种重要的策略梯度方法，即actor-critic算法。即使用TD算法去计算$q_t(s_t,a_t)$。
+
+
+## Lec10 Actor-Critic Methods 
+这一章我们将要学习actor-critic方法。首先对于其名字，actor代表着执行者（表演者），对应的是策略的更新，因为action是按照策略执行；而critic的字面意思是评论家，对应的是对策略的估计，实际上是对于值的更新（因为action/state value就代表了策略的优劣）。actor-critic恰好又对应台上演员和台下评论家的关系。
+
+从一个角度来看，actor-critic是将基于值和基于策略的方法相结合的一种方法，也可以从上一章介绍的policy gradient方法推导得到。
+
+
+### 10.1 The simplest actor-critic algorithm (QAC)
+这一节介绍最简单的actor-critic算法。算法可以从上一章（9.32）的策略梯度算法公式演变化得到。
+
+首先回顾一下上一章节的梯度上升算法：
+核心思想是通过最大化指标函数$J(\theta)$来找到一个最优策略，算法如下：
+$$\begin{align*}
+\theta_{t+1} &= \theta_t + \alpha \nabla_\theta J(\theta_t) \\
+&= \theta_t + \alpha \mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta_t) q_\pi(S, A) \right],\tag{10.1}
+\end{align*}$$
+上述公式含中真实的期望不知道，故采用随机梯度去近似得到下面算法：
+$$\theta_{t+1} = \theta_t + \alpha \nabla_\theta \ln \pi(a_t|s_t, \theta_t) q_t(s_t, a_t).\tag{10.2}$$
+
+式子（10.2）很重要，从这个式子很容易看出基于策略和基于值的方法是如何结合在一起的。
+
+一方面，这是一个基于策略的算法，这个公式本身就是在更新策略的参数。另一方面，这也是基于值的算法，公式需要知道$q_t(s_t, a_t)$,即我们也需要对于action value进行估计。将我们之前学到的两种值估计算法结合进去，就得到两种算法：
+* 如果使用MC方法更新$q_t(s_t, a_t)$，这就是第九章介绍的REINFORCE/Monte Carlo策略梯度；
+* 如果使用TD-learning的方法更新$q_t(s_t, a_t)$，就是这章的标题actor-critic。
+
+最简单的actor-critic算法在下图中总结：
+![My Local Image](./picture/10.1.png)
+**critc(value update)**用SARSA算法更新值，其中action valu（$q(s,a,w)$）使用函数近似表示;
+**actor(policy update)**按照梯度递增算法（10.2）更新策略。
+
+由于涉及q值估计，故该算法又被称为**Q actor-critc(QAC)**，很容易看出这是一个on policy 的算法，同时因为策略是使用函数近似表示的，是stochastic的，不需要$\epsilon$-greedy策略也能保证探索性。
+
+
+
+### 10.2 Advantage actor-critic (A2C)
+接下来介绍一种更优的算法：**advantage actor-critic(A2C)**，其核心思想是引入了**baseline**的概念来**减小估计的方差**。
+
+#### 10.2.1 Baseline invariance
+首先介绍策略梯度的一个有趣的性质：即新加入一个额外的偏差/基准，均值是不变的。也就是说：
+$$\mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta_t) q_\pi(S, A) \right] = \mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta_t) \left( q_\pi(S, A) - b(S) \right) \right], \tag{10.3}$$
+其中左边就是$J(\theta)$的梯度。额外的基准$b(S)$是关于状态$S$的标量函数。
+
+自然而然对于上述性质我们会产生疑问:为什么10.3成立？这个性质有什么用？
+下面来回答这两个问题。
+* 为什么等式10.3成立？
+  （10.3）成立的充要条件是：
+  $$\mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta_t) b(S) \right] = 0.$$
+  下式给出了上述等式的证明：其中利用了baseline$b(s)$与a无关的性质，将其从对于a的求和中提取出来。
+  $$
+  \begin{align*}
+  \mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta_t) b(S) \right]
+  &= \sum_{s \in S} \eta(s) \sum_{a \in A} \pi(a|s, \theta_t) \nabla_\theta \ln \pi(a|s, \theta_t) b(s) \\
+  &= \sum_{s \in S} \eta(s) \sum_{a \in A} \nabla_\theta \pi(a|s, \theta_t) b(s) \\
+  &= \sum_{s \in S} \eta(s) b(s) \sum_{a \in A} \nabla_\theta \pi(a|s, \theta_t) \\
+  &= \sum_{s \in S} \eta(s) b(s) \nabla_\theta \sum_{a \in A} \pi(a|s, \theta_t) \\
+  &= \sum_{s \in S} \eta(s) b(s) \nabla_\theta 1 = 0.
+  \end{align*}
+  $$
+* 加入baseline有什么作用？
+  先给出结论，引入baseline可以帮助减少使用样本去估计真实梯度的方差，使得估计更稳定可靠，训练更容易收敛。
+  令
+  $$X(S, A) \doteq \nabla_\theta \ln \pi(A|S, \theta_t) \left[ q_\pi(S, A) - b(S) \right] \tag{10.4}$$
+  那么真实梯度就是$\mathbb{E}[X(S, A)]$。我们需要使用一个随机的样本$x$去估计近似均值$\mathbb{E}[X]$，而我们希望的是这个随机变量$X$的方差，即var($X$)尽量的小，从而保证近似的准确性。
+  例如当方差为0时，任意一个样本$x$都能准确的近似$\mathbb{E}[X]$。
+
+  加入baseline不会影响$\mathbb{E}[X]$的值，但会影响$X$的方差，我们的目标就是去找到一个 **合适的** $b*(s)$**使得**var($X$)**最小**。
+
+  在前面的REINFORCE和QAC算法中，可以看作取$b=0$，但这不一定是最优的baseline.
+
+  实际上，能使得var($X$)最小的**最优的baseline**表达式为：
+  $$b^*(s) = \frac{\mathbb{E}_{A \sim \pi} \left[ \left\| \nabla_\theta \ln \pi(A|s, \theta_t) \right\|^2 q_\pi(s, A) \right]}{\mathbb{E}_{A \sim \pi} \left[ \left\| \nabla_\theta \ln \pi(A|s, \theta_t) \right\|^2 \right]}, \quad s \in \mathcal{S}. \tag{10.5}$$
+
+  尽管上式是最优的，但是因为计算复杂，实际中，当我们去除式子（10.5）中的权重$\left[ \left\| \nabla_\theta \ln \pi(A|s, \theta_t) \right\|^2 \right]$，能获得**次最优的baseline**：
+  $$b^\dagger(s) = \mathbb{E}_{A \sim \pi} \left[ q_\pi(s, A) \right] = v_\pi(s), \quad s \in \mathcal{S}.$$
+
+  有趣的是，这个**suboptimal baseline的表达式就是state value**。
+
+  关于上述optimal baseline的证明参考BOX 10.1
+ ![My Local Image](./picture/10.2.png)
+
+
+#### 10.2.2 Algorithm description
+基于前面得到的次优baseline，将$b(s)=v_{\pi}(s)$代入梯度上升算法得到：
+$$
+\begin{align*}
+\theta_{t+1} &= \theta_t + \alpha \mathbb{E}\left[ \nabla_\theta \ln \pi(A|S, \theta_t) \left[ q_\pi(S, A) - v_\pi(S) \right] \right] \\
+&\doteq \theta_t + \alpha \mathbb{E}\left[ \nabla_\theta \ln \pi(A|S, \theta_t) \delta_\pi(S, A) \right].
+\end{align*} \tag{10.7}
+$$
+
+这里:
+$$\delta_\pi(S, A) \doteq q_\pi(S, A) - v_\pi(S)$$
+被称作**优势函数**。这个函数能体现一个action相对于其他的优势，因为$v_\pi(S)$是对于action的均值，当$\delta_\pi(S, A)>0$的时候，代表这个action value相较于其他的action value更大。
+
+(10.7)对应的随机梯度版本为：
+$$\begin{align*}
+\theta_{t+1} &= \theta_t + \alpha \nabla_\theta \ln \pi(a_t|s_t, \theta_t) \left[ q_t(s_t, a_t) - v_t(s_t) \right] \\
+&= \theta_t + \alpha \nabla_\theta \ln \pi(a_t|s_t, \theta_t) \delta_t(s_t, a_t),
+\end{align*} \tag{10.8}$$
+其中$s_t,a_t$是$S,A$在时刻$t$的采样。$q_t(s_t,a_t)$和$v_t(s_t)$是对于$q_{\pi(\theta_t)}(s_t,a_t)$和$v_{\pi(\theta_t)}(s_t)$的近似。
+（10.8）实际上是根据$q_t$相较于$v_t$的相对值进行策略更新，而不是$q_t$的绝对值。
+
+与前面类似，当$q_t(s_t,a_t)$和$v_t(s_t)$使用MC进行估计时，算法就是**REINFORCE with a baseline**，使用TD-learning估计就是**advantage actor-critic(A2C)**
+
+但是（10.8）式子中$q_t(s_t, a_t) - v_t(s_t)$的估算，需要使用两个神经网络分别对于$q_t$和$v_t$进行估计，而我们可以根据$q_\pi$的定义，来使用TD error近似优势函数：（注意区分SARSA的TD error）
+$$q_t(s_t, a_t) - v_t(s_t) \approx r_{t+1} + \gamma v_t(s_{t+1}) - v_t(s_t).$$
+上述近似是合理的，可由下面$q_\pi$**的定义**进行说明：
+$$q_\pi(s_t, a_t) - v_\pi(s_t) = \mathbb{E}\left[ R_{t+1} + \gamma v_\pi(S_{t+1}) - v_\pi(S_t) \mid S_t = s_t, A_t = a_t \right],$$
+这个时候我们只需要一个神经网络来表示$v_\pi$的值就行了，否则就需要使用两个神经网络分别表示.基于TD error的算法流程如下：
+![My Local Image](./picture/10.3.png)
+
+
+当我们使用TD error时候算法也被称为**TD actor critic**。此外，需要注意的是用函数近似的策略$\pi(\theta_t)$是随机的，故也是探索性的（任意$\pi(a|s_t,a_t)$均>0），因此可以直接用来产生经验样本而不需要使用类似$\epsilon$-greedy等工具。显然，上述图片中的A2C算法也是on-policy的。
+
+
+
+
+### 10.3 Off-policy actor-critic
+我们在前面学习到的**REINFORCE、QAC、A2C等梯度上升算法都是on-policy**的，这一点其实从梯度的计算公式就能看出：
+$$\nabla_\theta J(\theta) = \mathbb{E}_{S \sim \eta, A \sim \pi} \left[ \nabla_\theta \ln \pi(A|S, \theta) \left( q_\pi(S, A) - v_\pi(S) \right) \right].$$
+实际中我们需要使用样本取近似真实的梯度，而样本按照上述公式需要根据$\pi(\theta)$来生成（因为$A\sim \pi$）。所以$\pi(\theta)$是behavior policy，而梯度上升算法在更新参数$\theta$就是在更新策略$\pi(\theta)$，故$\pi(\theta)$也是target policy，所以这几种梯度上升算法都是on-policy的。
+
+而在我们已经有了根据给定的behavior policy生成的样本后，同样可以使用策略梯度的方法去利用这些样本，这样算法就变成了off-policy了。其中的关键技术是**importance sampling（重要性采样）**。值得注意的是，这项技术不仅可以用在强化学习中，也是一种使用一种分布下的样本去近似另一种分布下的期望值的方法。
+
+
+#### 10.3.1 Importance sampling
+我们先用一个例子来介绍importance sampling技术。考虑随机变量$X\in \mathcal{X}$，假设$p_0(X)$是一个概率分布，我们的目标是去估计$\mathbb{E}_{X\sim p_0}[X]$，我们已知一些独立同分布（i.i.d.）的样本$\{x_i\}_{i=1}^n$。
+
+* 如果样本$\{x_i\}_{i=1}^n$是遵循$p_0$生成的，那很简单，直接使用$x_i$的平均值$\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i$就能近似$\mathbb{E}_{X\sim p_0}[X]$。由于大数定理可以证明这是无偏估计，同时方差随着$n\approx\infty$而收敛到0。
+* 更常见的情况是生成样本$\{x_i\}_{i=1}^n$分布是另一个分布$p_1$，此时不能使用上面的均值$\bar{x}$来近似了，需要使用**重要性采样**技术。
+
+具体来说：目标$\mathbb{E}_{X\sim p_0}[X]$满足：
+$$\mathbb{E}_{X \sim p_0}[X] = \sum_{x \in \mathcal{X}} p_0(x) x = \sum_{x \in \mathcal{X}} p_1(x) \underbrace{\frac{p_0(x)}{p_1(x)} x}_{f(x)} = \mathbb{E}_{X \sim p_1}[f(X)]. \tag{10.9}$$
+因此估计$\mathbb{E}_{X\sim p_0}[X]$转变为估计$\mathbb{E}_{X \sim p_1}[f(X)]$的问题，这一步的核心思想是对于$p_0$分布下的均值通过一个系数（重要性权重）转换到$p_1$分布下的均值。
+
+而上式右端的近似为$\bar{f}$:
+$$\bar{f} \triangleq \frac{1}{n} \sum_{i=1}^n f(x_i).$$
+将上式代入（10.9）得：
+$$\mathbb{E}_{X \sim p_0}[X] = \mathbb{E}_{X \sim p_1}[f(X)] \approx \bar{f} = \frac{1}{n} \sum_{i=1}^n f(x_i) = \frac{1}{n} \sum_{i=1}^n \underbrace{\frac{p_0(x_i)}{p_1(x_i)}}_{\text{importance weight}} x_i. \tag{10.10}$$
+式子（10.10）表示，$\mathbb{E}_{X\sim p_0}[X]$可以近似为$x_i$**的加权平均**。其中$\frac{x_0}{x_1}$被称为**重要性权重**。
+* 当$p_1=p_0$时，权重为1，$\bar{f}$退化为$\bar{x}$;
+* 当$p_0(x_i)\geq p_1(x_i)$时，此时样本$x_i$由$p_0$生成得频率高于$p_1$，此时重要性权重大于1，所以当我们用$p_1$生成得样本去近似时，需要乘上一个大得权重去**突出该样本的重要性**。
+
+式子（10.10）中需要用到$p_0(x)$，可能会有疑问，已经知道了$p_0$那为什么不直接使用定义$\mathbb{E}_{X\sim p_0}[X]=\sum_{x\in \mathcal{X}p_0(x)x_0}$来计算呢？
+
+回答如下：要使用该定义式，我们需要获取$p_0$**的解析表达式**（连续的情况），或得到$p_0$在**样本空间**$\mathcal{X}$**所有取值**$x$**下的函数值**。
+然而，当分布由（例如）神经网络表示时，我们很难得到$p_0$的解析表达式；此外，当样本空间规模较大时，获取所有$x\in\mathcal{X}$对应得概率分布$p_0$也不现实。相比之下， (10.10) 仅需要计算**部分样本**$x_1$**对应的**$p_0(x_i)$，在实际应用中更容易实现。
+
+书中给了一个简单的例子，见P223，这里补充了书上没有展示的具体使用重要性采样计算的步骤。
+![My Local Image](./picture/10.5.png)
+
+
+#### 10.3.2 The off-policy policy gradient theorem
+基于重要性采样技术，我们可以给出**off-policy策略梯度定理**。这里我们假设$\beta$是一个behavior策略，我们的目标是利用$\beta$生成的样本，来学习一个能最大化下列指标的target policy$\pi$:
+$$
+J(\theta) = \sum_{s \in S} d_\beta(s) v_\pi(s) = \mathbb{E}_{S \sim d_\beta} [v_\pi(S)],$$
+其中$d_\beta$是策略$\beta$下的平稳分布,$v_\pi$是策略$\pi$下的state value。该指标的梯度由以下定理给出：
+
+##### Theorem 10.1 Off-policy policy gradient theorem(off-policy策略梯度定理)
+在discounted情况下$\gamma\in(0,1)$，$J(\theta)$的梯度为：
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{S \sim \rho, A \sim \beta} \left[ \underbrace{\frac{\pi(A|S, \theta)}{\beta(A|S)}}_{\text{importance weight}} \nabla_\theta \ln \pi(A|S, \theta) q_\pi(S, A) \right], \tag{10.11}
+$$
+其中状态分布$\rho$满足：
+$$\rho(s) \triangleq \sum_{s' \in S} d_\beta(s') \Pr_\pi(s|s'), \quad s \in S,$$
+而$\Pr_\pi(s|s') = \sum_{k=0}^\infty \gamma^k [P_\pi^k]_{s' s} = [(I - \gamma P_\pi)^{-1}]_{s' s}$是在策略$\pi$下从$s'$转移到$s$的折扣总概率。
+
+式 (10.11) 中的梯度与定理 9.1 中的同策略梯度相似，但存在两点区别：
+* 第一是多了重要性权重；
+* 第二是动作$A$由$\beta$采样，而非由$\pi$采样。
+由上面的定理，我们就能使用遵循$\beta$生成的动作样本来近似真实的梯度。
+上述定理的详细证明参考BOX 10.2。
+![My Local Image](./picture/10.6.png)
+
+
+#### 10.3.3 Algorithm description
+基于off-policy策略梯度定理，现在可以给出**off-policy actor critic算法**。off-policy和on-policy的算法非常相似，这里只介绍一些关键步骤。
+
+首先，off-policy策略梯度对于baseline$b{s}$仍具有不变性，具体来说我们有：
+$$
+\begin{align*}
+\nabla_\theta J(\theta) &= \mathbb{E}_{S \sim \rho, A \sim \beta} \left[ \frac{\pi(A|S, \theta)}{\beta(A|S)} \nabla_\theta \ln \pi(A|S, \theta)  q_\pi(S, A)  \right]\\
+&= \mathbb{E}_{S \sim \rho, A \sim \beta} \left[ \frac{\pi(A|S, \theta)}{\beta(A|S)} \nabla_\theta \ln \pi(A|S, \theta) \left( q_\pi(S, A) - b(S) \right) \right]
+\end{align*}
+$$
+跟前边A2C中证明过程相似，可以证明$\mathbb{E}[\frac{\pi(A|S, \theta)}{\beta(A|S)} \nabla_\theta \ln \pi(A|S, \theta) b(S)]=0$，为了降低估计的方差，跟前边一样，选取baseline$b(S)=v_\pi(S)$，从而得到：
+$$
+\nabla_\theta J(\theta) = \mathbb{E}\left[ \frac{\pi(A|S, \theta)}{\beta(A|S)} \nabla_\theta \ln \pi(A|S, \theta) \left( q_\pi(S, A) - v_\pi(S) \right) \right].
+$$
+对应的随机梯度上升算法为：
+$$\theta_{t+1} = \theta_t + \alpha_\theta \frac{\pi(a_t|s_t, \theta_t)}{\beta(a_t|s_t)} \nabla_\theta \ln \pi(a_t|s_t, \theta_t) \left( q_t(s_t, a_t) - v_t(s_t) \right),$$
+其中$\alpha_\theta>0$。与on-policy类似，优势函数可以使用TD-error代替：
+$$q_t(s_t, a_t) - v_t(s_t) \approx r_{t+1} + \gamma v_t(s_{t+1}) - v_t(s_t) \doteq \delta_t(s_t, a_t).$$
+于是**算法变成了：**
+$$
+\theta_{t+1} = \theta_t + \alpha_\theta \frac{\pi(a_t|s_t, \theta)}{\beta(a_t|s_t)} \nabla_\theta \ln \pi(a_t|s_t, \theta) \delta_t(s_t, a_t).
+$$
+具体的内容总结在**下图中**：
+![My Local Image](./picture/10.4.png)
+可以看到，该算法与A2C算法完全相同，只是在critic和actor部分**额外包含了importance weigh**t。需要注意的是，不仅是前面的actor部分的参数更新公式使用了重要性采样，在critic的**value估计**过程中也使用了**重要性采样**从on-policy转换到off-policy（如果不进行转换，那么这些样本估计的结果会趋向于$v_\beta$,而不是我们需要的$v_\pi$）。
+
+事实上，重要性采样是一种通用技术，可以应用于基于策略和基于价值的算法。最后，算法 10.3 可以通过多种方式扩展，以融入更多技术，例如资格迹（eligibility traces）等。
+
+
+### 10.4 Deterministic actor-critic
+前面介绍的策略梯度算法，在策略上都有一个条件：任意的$\pi(a|s,\theta)>0$，即方法都是stochastic的。
+
+而这一节，将会介绍**deterministic策略的策略梯度算法（DPG）**。先来解释一下这里的deterministic，这里的确定性指的是对于任意一个state，仅给单个动作分配概率 1，其余所有动作的概率均为 0。
+
+为什么要研究deterministic的情况呢？因为他是**天然off-policy**的，同时能有效**处理连续的动作空间**。
+
+我们一直使用$\pi(a|s,\theta)$来表示一般策略，既可以是随机也可以是确定的。本节中，我们使用：
+$$a=\mu(s,\theta)$$
+来专门表示deterministic策略。$\pi$是给出动作的概率，而这里的$\mu$直接**输出选择的动作**，因此，他可以看作一个从状态空间$\mathcal{S}$到动作空间$\mathcal{A}$的映射。
+
+这种确定性策略可以使用神经网络来表示：以s为输入，a为输出，参数是$\theta$，有时候将$\mu(s,\theta)$简写为$\mu(s)$。
+
+
+#### 10.4.1 The deterministic policy gradient theorem
+上一章介绍的策略梯度定理仅对于随机策略有效。当我们要求策略为确定性时，必须推导新的策略梯度定理。
+
+##### Theorem 10.2 Deterministic policy gradient theorem（确定性策略梯度定理）
+$J(\theta)$**的梯度为：**
+$$
+\begin{align*}
+\nabla_\theta J(\theta) &= \sum_{s \in S} \eta(s) \nabla_\theta \mu(s) \left( \nabla_a q_\mu(s, a) \right) \big|_{a = \mu(s)} \\
+&= \mathbb{E}_{S \sim \eta} \left[ \nabla_\theta \mu(S) \left( \nabla_a q_\mu(S, a) \right) \big|_{a = \mu(S)} \right],
+\end{align*} \tag{10.14}
+$$
+其中$\eta$是状态的分布。
+
+跟前面的梯度定理类似，10.2定理是对于不同指标下的梯度公式的总结，不同指标（$\bar{v}_\pi$和$\bar{q}_\pi$）的公式在定理10.3、10.4中有详细的表达和证明。
+
+公式期望由两部分组组成，前面是$\mu(S)$关于$\theta$的梯度，后边是先对于$q_\mu(S,a)$求关于$a$的梯度，再将$a$替换为$\mu(S)$。
+
+与随机情形不同，式 (10.14) 所示的确定性情形下的梯度**不涉及动作随机变量**$A$，因为被替换成了$\mu(S)$。因此，当我们使用样本近似真实梯度时，**无需对动作进行采样**。所以确定性策略梯度方法是off-policy的。（随机策略梯度涉及了$A\sim\pi$的期望，所以是on-policy）
+
+此外，一些读者可能会疑惑，为什么$\left( \nabla_a q_\mu(S, a) \right) \big|_{a = \mu(S)}$不能写成更简洁的$\nabla_a q_\mu(S, \mu(S))$。原因很简单：如果这样写，就不清楚$q_\mu(S, \mu(S))$是关于a的函数。一个更简洁但容易混淆的表达式是$\nabla_a q_\mu(S, a=\mu(S))$。
+
+书在本节后半部分会给出两种不同指标（average value和average reward）的公式，但对大多数读者而言，熟悉定理 10.2 即可，无需了解其推导细节。
+具体可以详见P228-P233。
+
+
+#### 10.4.2 Algorithm description
+基于定理 10.2 给出的梯度，我们可以应用梯度上升算法来最大化$J(\theta)$:
+$$\theta_{t+1} = \theta_t + \alpha_\theta \mathbb{E}_{S \sim \eta} \left[ \nabla_\theta \mu(S) \left( \nabla_a q_\mu(S, a) \right) \big|_{a = \mu(S)} \right].$$
+对应的随机梯度上升算法为：
+$$\theta_{t+1} = \theta_t + \alpha_\theta \nabla_\theta \mu(s_t) \left( \nabla_a q_\mu(s_t, a) \right) \big|_{a = \mu(s_t)}.$$
+该算法的实现总结在下图中算法 10.4。
+![My Local Image](./picture/10.7.png)
+需要注意的是，由于行为策略$\beta$可能与$\mu$不同，因此该算法是off-policy的。
+首先actor部分是off-policy的，因为不涉及到$A$的分布；其次critic也是off-policy的，需要特别注意的是，为什么这里的critic（对比前面的off-policy的随机梯度）不需要使用重要性采样呢？
+
+具体来说，critic所需的经验样本是$(s_t,a_t,r_{t+1},s_{t+1},\tilde{a}_{t+1})$其中$\tilde{a}_{t+1} = \mu(s_{t+1})$。
+
+生成该经验样本涉及两种策略：第一种是在$s_t$生成$a_t$的策略，第二种是在$s_{t+1}$生成$\tilde{a}_{t+1}$的策略。生成$a_t$的第一个策略是行为策略，因为$a_t$用于与环境交互;生成$\tilde{a}_{t+1}$的第二个策略必须是$\mu$因为它是critic要评估的目标策略。要注意的是，$\tilde{a}_{t+1}$不会用于在下一个时间步与环境交互。因此$\mu$不是行为策略，所以critic是off-policy的。
+
+那么如何选择函数$q(s,a,w)$呢?提出DPG(Deterministic policy gradient)方法的原始论文采用了**线性函数**：$q(s,a,w) = \phi^T(s,a) w$，其中$\phi(s,a)$是特征向量；目前使用**神经网络**来表示$q(s,a,w)$也是非常流行的方法，例如DDPG（Deep deterministic policy gradient）。
+
+如何选择行为策略$beta$呢？他可以是任意的探索性策略。可以直接在$\mu$的基础上添加噪声得到一个随机策略，在这样的情况下，$\mu$也是行为策略，因此这样也是一种on-policy的实现。
+
+
+### 10.5 Summary
+在本章中，我们介绍了actor-critic方法。内容总结如下：
+* 10.1 节介绍了最简单的actor-critic算法，称为**QAC**。该算法与上一章介绍的策略梯度算法 REINFORCE 类似。唯一的区别在于，QAC 中的**动作价值（q-value）**估计依赖于**TD learning**，而 REINFORCE 依赖于蒙特卡洛估计。
+* 10.2 节将 QAC 扩展为**A2C（advantage actor-critic）**。我们证明了策略梯度对任意额外的**基准（baseline）**具有不变性，并且最优基准有助于降低估计方差。
+* 10.3 节进一步将A2C算法扩展到 **off-policy**场景。为此，我们介绍了一种重要技术 ——重要性采样（importance sampling）。
+* 最后，虽然之前介绍的所有策略梯度算法都依赖于随机策略，但在 10.4 节中，我们证明了**策略也可以是确定性的**。我们推导了对应的DPG，并介绍了DPG算法。
+
+策略梯度和actor-ritic方法在现代强化学习中得到了广泛应用。文献中存在大量高级算法，例如 SAC [76,77]、TRPO [78]、PPO [79] 和 TD3 [80]。此外，单智能体场景也可以扩展到多智能体强化学习场景 [81–85]。经验样本也可用于拟合系统模型，以实现基于模型的强化学习 [15,86,87]。分布强化学习提供了与传统方法根本不同的视角 [88,89]。强化学习与控制理论之间的关系已在 [90–95] 中进行了讨论。本书无法涵盖所有这些主题。希望本书奠定的基础能够帮助读者在未来更好地研究它们。
