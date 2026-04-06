@@ -1,0 +1,289 @@
+# 1. Whole-body Control
+
+人形机器人全身运动控制策略是执行所有动作的基石
+
+## 1.1 Humanoid motion mimic
+
+模仿参考轨迹是最基本的WBC
+
+**DeepMimic**: Example-Guided Deep Reinforcement Learning of Physics-Based Character Skills
+
+SIGGRAPH 2018：https://xbpeng.github.io/projects/DeepMimic/index.html
+
+现代人形运控的开山之作，最原始的动作模仿框架，从单条动捕数据中学习强化学习控制器
+
+**KungfuBot:** Physics-Based Humanoid Whole-Body Control for Learning Highly-Dynamic Skills
+
+NIPS 2025： https://kungfu-bot.github.io/
+
+高动态跟踪，用一个可以根据tracking error自适应的sigma来调整reward松紧
+
+**BeyondMimic:** From Motion Tracking to Versatile Humanoid Control  via Guided Diffusion
+
+主页： https://beyondmimic.github.io/
+
+用条件扩散模型来蒸馏底层控制器，并贡献了目前开源代码中最好用的底层运动跟踪器框架
+
+**Any2track:** Track Any Motions under Any Disturbances
+
+主页： https://zzk273.github.io/Any2Track/
+
+从demo上来看是目前最鲁棒的跟踪器，怎么踹都能继续跳
+
+## 1.2. Command Locomotion
+
+可以完成对物理指令的跟踪是进阶版的WBC
+
+**AMP**: Adversarial Motion Priors for Stylized Physics-Based Character Control
+
+SIGGRAPH 2021：https://xbpeng.github.io/projects/AMP/index.html
+
+引入GAN架构对actor做对抗训练，把动作transition建模成分布，来引入运动风格的奖励
+
+**Exbody:** Expressive Whole-Body Control for Humanoid Robots
+
+**ExBody2**: Advanced Expressive Humanoid Whole-Body Control
+
+RSS 2024：https://expressive-humanoid.github.io/
+
+人形机器人全身速度追踪与身体特征点追踪解耦，上半身模仿参考动作，双腿跟速度
+
+**MoE-Loco**: Mixture of Experts for Multitask Locomotion
+
+IROS 2025：https://moe-loco.github.io/
+
+引入混合专家模型使单一策略能够处理多样地形（包括横杆、坑洞、台阶、斜坡和挡板）
+
+**HugWBC**: A Unified and General Humanoid WBC for Versatile Locomotion
+
+RSS 2025：https://hugwbc.github.io/
+
+引入末端绕动，使得指令行走可以被步态和姿势精准控制
+
+**HOVER**:  Versatile Neural Whole-Body Controller for Humanoid Robots
+
+ICRA 2025：https://hover-versatile-humanoid.github.io/
+
+多模式策略蒸馏框架，统一root的指令跟踪，关节角跟踪和关键点跟踪三种模式
+
+## 1.3. Motor Skill Learning
+
+能够通过任务奖励引导WBC进行技能学习
+
+**ASE**: Large-Scale Reusable Adversarial Skill Embeddings for Physically Simulated Characters
+
+SIGGRAPH 2022：https://xbpeng.github.io/projects/ASE/index.html
+
+把动作transition视为原子技能，通过上层控制器进行条件控制实现走跑跳技能串联
+
+**HuB:** Learning Extreme Humanoid Balance
+
+CoRL 2025：https://hub-robot.github.io/
+
+用静态数据学习保持平衡
+
+**HumanUP:** Learning Getting-Up Policies for Real-World Humanoid Robots
+
+RSS 2025：https://humanoid-getup.github.io/
+
+跌倒爬起
+
+**HOST：**Learning Humanoid Standing-up Control across  Diverse Postures
+
+RSS 2025：https://taohuang13.github.io/humanoid-standingup.github.io/
+
+跌倒爬起 + 任意地形
+
+## 1.4. Tele-operation
+
+能够同步人类远程动作的WBC
+
+**Human2Humanoid**: Learning Human-to-Humanoid Real-Time Whole-Body Teleoperation
+
+IROS 2024：https://human2humanoid.com/
+
+RGB摄像头来对全尺寸人形机器人的实时全身遥操作
+
+**OmniH2O:** Universal and Dexterous Human-to-Humanoid Whole-Body Teleoperation and Learning
+
+CoRL 2024：https://omni.human2humanoid.com/
+
+支持VR头、语音指令、RGB摄像头的全尺寸人形机器人的实时全身遥操作
+
+**HumanPlus:** Humanoid Shadowing and Imitation from Humans
+
+CoRL 2024：https://humanoid-ai.github.io/
+
+从人类数据中学习动作与自主技能，然后遥操作+关节角度跟踪，完成卸载物品、叠衣服、打字
+
+**Mobile-TeleVision**: Predictive Motion Priors for  Humanoid Whole-Body Control
+
+ICRA 2025：https://mobile-tv.github.io/
+
+支持VR来遥操作，可以做轻量级的交互
+
+**TWIST:** Teleoperated Whole-Body Imitation System
+
+CoRL 2025：https://yanjieze.com/TWIST/
+
+支持VR来遥操作，RL+BC的WBV
+
+**CLONE:** Closed-Loop Whole-Body Humanoid Teleoperation for Long-Horizon Tasks
+
+主页：https://humanoid-clone.github.io/
+
+在遥操作的基础上引入了闭环检测
+
+## 1.5. Universal tracking
+
+能够从大规模数据学习基本运动能力的WBC
+
+**PHC**: Perpetual Humanoid Control for Real-time Simulated Avatars
+
+ICCV 2023：https://www.zhengyiluo.com/PHC-Site/
+
+第一个面向大规模动捕数据的通用控制器，身体关键点的位置跟踪，给了smpl骨架但重定向效果一般
+
+**UniTracker:** Learning Universal Whole-Body Motion Tracker for  Humanoid Robots
+
+主页：https://yinkangning0124.github.io/Humanoid-UniTracker/
+
+早期的全身动作跟踪器，但并未开源
+
+**GMT:** General Motion Tracking for Humanoid Whole-Body Control
+
+主页：https://gmt-humanoid.github.io/
+
+通用运动追踪框架GMT，自适应采样策略+混合专家模型来做单策略通用跟踪
+
+**BFM**: Behavior Foundation Model for Humanoid Robots
+
+主页：https://bfm4humanoid.github.io/
+
+基于大规模行为数据集预训练的生成模型，用CVAE来建模分布
+
+## 1.6. Multi-modality WBC
+
+**From Language to Locomotion**: Retargeting-free Humanoid Control via Motion Latent Guidance
+
+主页：https://beingbeyond.github.io/RLPF/
+
+自然语言生成动作
+
+**RL from Physical Feedback:** Aligning Large Motion Models with Humanoid Control
+
+主页：https://beingbeyond.github.io/RLPF/
+
+把T2M+WBC当自然语言模型一样微调，RLPF比SFT效果好
+
+**TextOp:** Real-time Interactive Text-Driven Humanoid Robot Motion Generation and Control
+
+主页：https://text-op.github.io/
+
+T2M+GMT的范式，代码仓极具参考价值
+
+# 2. Control with estimation
+
+在WBC的基础上能够对自身状态和环境进行感知和估计
+
+## 2.1. Sim and Real Gap
+
+**ASAP**:  Aligning Simulation and Real-World Physics  for Learning Agile Humanoid Whole-Body Skills
+
+RSS 2025：https://agile.human2humanoid.com/
+
+采集真机数据，训练残差动作模块补偿sim2real gap
+
+## 2.2. Visual locomotion
+
+**MoRE**: Mixture of Residual Experts  for Humanoid Lifelike Gaits Learning on Complex Terrains
+
+主页：https://more-humanoid.github.io/
+
+混合潜在残差专家与multi-critcer来做RL，训练多地形指令行走
+
+**PIM**: Learning Humanoid Locomotion with Perceptive Internal Model
+
+主页：https://junfeng-long.github.io/PIM/
+
+本体+以自身为坐标系的高度图来感知环境
+
+## 2.3. Sports Skills
+
+**HITTER:** A HumanoId Table TEnnis Robot  via Hierarchical Planning and Learning
+
+主页：https://humanoid-table-tennis.github.io/
+
+通过对乒乓球的光捕真值和动力学建模来作为任务奖励，在真机中实现击球106次
+
+**Skillmimic:** Learning Reusable Basketball Skills from Demonstrations
+
+**SkillMimic-V2**: Learning Robust and Generalizable Interaction Skills from Sparse and Noisy Demonstrations
+
+CVPR 2025：https://ingrid789.github.io/SkillMimic/
+
+SIGGRAPH 2025: https://ingrid789.github.io/SkillMimicV2/  
+
+单一策略实现打篮球各个状态的技能切换
+
+# 3. Humanoid Interaction
+
+## 3.1. Physics Animation
+
+物理角色动画里面的交互，仿真中可以拿到任意特权观测，用来构造参考数据
+
+**MaskedMimic**: Unified Physics-Based Character Control Through Masked Motion Inpainting
+
+SIGGRAPH Asia 2024：https://research.nvidia.com/labs/par/maskedmimic/
+
+进行掩码学习，实现多稀疏目标关键帧、文本指令及场景信息学习
+
+**INTERMIMIC:** Towards Universal Whole-Body Control for Physics-Based Human-Object Interactions
+
+从低质量动捕数据中学习和物体交互的策略
+
+## 3.2. Decoupled Loco-Manipulation
+
+交互的早期工作，为了能交互，强行将上肢与下肢控制解耦
+
+**FALCON:** Learning Force-Adaptive Humanoid Loco-Manipulation
+
+主页：https://lecar-lab.github.io/falcon-humanoid/
+
+受力干扰下保持稳健行走能力，负载运输（0-20N力）、推车（0-100N）及开门（0-40N）
+
+**Hold My Beer:** Learning Gentle Humanoid Locomotion and End-Effector Stabilization Control
+
+主页：https://lecar-lab.github.io/SoFTA/
+
+快慢系统在移动过程中实现精细控制，完成满杯的饮料的搬运
+
+## 3.3. Human-Object Interactions
+
+**HDMI:** Learning Interactive Humanoid  Whole-Body Control from Human Videos
+
+主页：https://hdmi-humanoid.github.io/
+
+单目RGB视频中学习全身人形机器人-物体交互技能，简单高效
+
+**Resmimic:** Visual Imitation Enables Contextual Humanoid Control
+
+主页：https://resmimic.github.io/
+
+在通用控制器GMT上做残差模块，比微调GMT效果要好
+
+## 3.4. Human-Scene Interactions
+
+**Videomimic:** Visual Imitation Enables Contextual Humanoid Control
+
+CoRL 2025：https://www.videomimic.net/
+
+首个把视频重建+姿态估计+重定向对齐+模仿学习+视觉行走全面打通，但是每个模块都表现欠佳
+
+**PhysHSI:** Towards a Real-World Generalizable and Natural Humanoid-Scene Interaction System
+
+主页：https://why618188.github.io/physhsi/
+
+引入视觉，激光雷达+RGB摄像头融合的物体定位来实现搬箱子，坐下躺下，起身全身控制论文
+
+#可以看看这个

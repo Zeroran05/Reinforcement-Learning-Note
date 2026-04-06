@@ -586,7 +586,7 @@ $$v_{k+1} =  \max_{\pi \in \Pi} \left( r_\pi + \gamma P_\pi v_k \right),\quad k 
 * Policy update:从数学的角度，这一步的目的是找到一个能解决下列最优化问题的策略：其中$v_k$是上一步迭代已经得到的值。
   $$\pi_{k+1}=\arg \max_{\pi }(r_\pi+\gamma P_\pi v_k) $$
 * Value update:数学上，这一步是基于policy update得到的$\pi_{k+1}$去更新新的value：
-  $$v_{k+1} =  r_{\pi+1} + \gamma P_{\pi+1} v_k $$
+  $$v_{k+1} =  r_{\pi_{k+1}} + \gamma P_{\pi_{k+1}} v_k $$
   $v_{k+1}$会用于下一步迭代。注意这里的公式仅仅是一个值的迭代公式，求出的值并不是state value，只有通过BE求解的才是state value。
 上述情况围绕vector form从原理上进行解释，实际计算需要理解elementwise form（每个元素独立操作形式）的实现。
 
@@ -1290,6 +1290,8 @@ $$
 ![My Local Image](./picture/7.3.png)
 还要补充一点，由于TD有着**自举性（bootstrapping）**，故其受初值影响大，如果初值选取距离实际值相差太大，估计值在迭代早期会有bias，但最终随着次数增加这个bias会被消除。
 
+需要注意的是，前面讲的MC是在求解最优的策略和状态值，这里最基本的TD-learning只是对于当前状态值的估计，并没有涉及策略的更新。
+
 #### 7.1.3 Convergence analysis
 收敛性对于学习率$\alpha_t(s)$有要求：
 ![My Local Image](./picture/7.4.png)
@@ -1308,7 +1310,7 @@ q_{t+1}(s, a) &= q_t(s, a), \quad \text{for all } (s, a) \neq (s_t, a_t),
 \end{align*}
 $$
 其中 t=0,1,2,…。这里的$q_t(s_t,a_t)$表示的是在时刻t下**对于action value** $q_\pi(s_t,a_t)$ **的估计**；$\alpha_t(s_t,a_t)$表示的是在时刻t下对于状态$s_t$-动作$a_t$对的**学习率**。
-在时刻$t$，只有$(s_t,a_t)$的$q$值会被更新，其他的状态动作对的$q$保持不变。
+在时刻$t$，只有$(s_t,a_t)$的$q$值会被更新，**其他的状态动作对的**$q$**保持不变**。不要忘了这个，q值是每一个时刻都更新一次的，底下的下标代表的是新时刻下的q，跟后边的状态和动作的时间索引是不一样的。
 
 下面分析Sarsa算法的一些重要性质：
 * **为什么这个算法叫 “Sarsa”？**
@@ -1342,6 +1344,8 @@ $q$值更新步骤仅会更新时刻$t$访问到的单个状态 - 动作对的$q
 因此，我们并不会在更新策略前充分评估当前策略 —— 这是基于广义策略迭代的思想。此外，策略更新后会立即用于生成下一个经验样本；这里采用$ϵ$-greedy策略是为了保证探索性。
 
 书中举了一个例子。这里是用Sarsa去找到从特定起始状态到目标状态的最优路径，而非为所有状态找到最优策略。这种任务实际中更常见，这类任务相对简单，因为只需探索路径附近的状态，无需遍历所有状态；但造成的问题是得到的**最优策略可能是局部的**，其他访问少的状态的策略不一定是最优。
+
+对比一下Sarsa和MC在策略更新上的区别：MC的实现是先基于策略采样一个episode，对于episode逆序每一步都估计action value并更新策略，只有等到所有更新完了才会用新的策略再去采样新的episode;而Sarsa是基于当前的$（s_t,a_t）$，与环境交互得到$（r_{t+1},s_{t+1}）$按照策略记为$\pi_t$得到$a_{t+1}$,接着通过迭代公式更新$q_t$的估计值并更新到策略$\pi_{t+1}$，这个更新的策略是会马上用在下一步的采样中去的，但注意的是，更新的仅仅是$（s_t,a_t）$的策略，选择$a_{t+2}$的策略跟旧策略$\pi_t$是一致的。
 
 ##### Expected Sarsa
 Sarsa算法有一个变体：Expected Sarsa，区别是将后边的下一时序状态action value的估计换成了期望（对于动作A的期望）。
@@ -1426,7 +1430,7 @@ $$
 * 若n取较小的数值，n-step Sarsa会接近 Sarsa：估计结果的偏差相对较大，但方差较低。
 
 
-### 7.4 Q-learning：D learning of optimal action values
+### 7.4 Q-learning：Q learning of optimal action values
 前面介绍的都是对于给定策略状态值或者动作值的估计，这一节将会介绍大名鼎鼎的Q-learning算法，其**直接是对最优action value和最优policy进行估计**。
 
 #### 7.4.1 Algorithm description

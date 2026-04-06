@@ -1,6 +1,14 @@
 # 本代码对最基本的PPO算法进行了验证，使用CartPole-v1环境进行训练和测试。
 # 代码使用的是PPO_Clip版本，原论文还有KL版本；
 # 本代码的PPO算法是on-policy的，想实现off-policy，可以通过重要性采样/经验回放实现。
+# PPO算法具体网络训练迭代的逻辑分析：
+# 在训练过程，首先初始化网络和优化器，接着一个循环去生成episodes
+# 在每个episode中，按照旧策略，agent与环境进行交互得到一个轨迹，轨迹中包含状态、动作、奖励等信息，这些信息被存储在memory中，直到episode结束。
+# 一个episode结束后，调用update方法，首先从memory中提取出状态、动作、奖励等信息，并计算折扣奖励和优势函数。
+# 接着进行K_epochs次循环，这个循环是为了充分利用采样的样本，每循环一次新网络参数都会更新一次
+# 每次循环具体包括去计算需要的目标函数，合成总的loss函数后，再调用优化器去进行梯度参数更新。
+# k_epochs次循环更新完成后，跳出循环，将当前策略网络的参数复制到旧策略网络中
+# 接着进入新的episode，重复上述过程，直到达到最大episode数。
 
 import torch  # Import PyTorch, a popular machine learning library
 import torch.nn as nn  # Import the neural network module
@@ -65,7 +73,7 @@ class PPO:  # Define the PPO agent
         self.critic_loss_history = []
         
         
-
+    # 传入state和memory，在当前actor网络下选择动作并存储相关信息到memory中,输出动作的索引值
     def select_action(self, state, memory):  #duck typeing: 只要传入的state和memory满足底下的要求，就可以使用这个方法，不需要关心它们的具体类型,
                                              #进入程序才会检查,故可以在没有声明/实例化Memory类的情况下使用类下的属性.
         state = torch.FloatTensor(state).to(device)  # 将输入状态转换为PyTorch张量，并移动到指定设备
@@ -79,7 +87,7 @@ class PPO:  # Define the PPO agent
 
         return action.item()  # 上面的action是一个张量，使用item()方法将其转换为Python标量并返回
                               # eg: tensor(1) -> 1
-                              
+    # 传入memory,先导出memory中的旧的状态、动作、奖励等信息                         
     def update(self, memory):
         # Convert memory to tensors
         old_states = torch.stack(memory.states).to(device).detach()  # states原本是一个list，使用torch.stack()将其转换为一个张量，并移动到指定设备，
